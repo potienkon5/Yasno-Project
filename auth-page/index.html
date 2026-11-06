@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Ясно — подтверждение почты</title>
+  <style>
+    :root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100dvh;display:grid;place-items:center;background:#0d1530;color:#f1f2fc;padding:20px}
+    article{width:min(100%,440px);background:#18244b;border:1px solid #303d6b;border-radius:20px;padding:28px;box-shadow:0 18px 60px #05091f66}
+    h1{font:600 34px Georgia,serif;margin:0 0 20px}
+    h2{font-size:22px;margin:0 0 12px}
+    p{line-height:1.6;color:#bdc8e6}
+    a,button{display:block;width:100%;padding:14px 18px;border-radius:12px;background:#dfe6ff;color:#15214a;font:600 16px system-ui;text-align:center;border:0;text-decoration:none;cursor:pointer;margin-top:16px}
+    a.secondary{background:transparent;color:#dfe6ff;border:1px solid #576795}
+    input{width:100%;padding:13px;color:#fff;background:#111b3b;border:1px solid #576795;border-radius:10px;margin-top:10px;font:16px system-ui}
+    label{display:block;margin-top:12px;color:#d2dcf6}
+    #error{color:#ffb2bd}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+  <article>
+    <h1>Ясно</h1>
+    <h2 id="title">Проверяем ссылку…</h2>
+    <p id="message">Подтверждаем действие в Supabase.</p>
+    <form id="password-form" hidden>
+      <label for="password">Новый пароль (не менее 8 символов)</label>
+      <input id="password" type="password" autocomplete="new-password" minlength="8" required>
+      <label for="repeat">Повторите пароль</label>
+      <input id="repeat" type="password" autocomplete="new-password" minlength="8" required>
+      <button type="submit">Сохранить пароль</button>
+    </form>
+    <p id="error" role="alert" hidden></p>
+    <a id="download" href="https://github.com/potienkon5/Yasno-Project/releases/latest/download/yasno-release.apk" hidden>Скачать приложение «Ясно»</a>
+    <p id="hint" hidden>Если «Ясно» уже установлено, откройте его на телефоне и войдите со своим email и паролем.</p>
+  </article>
+  <script type="module">
+    import config from './supabase-config.js';
+    import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const $=id=>document.getElementById(id);
+    const qs=new URLSearchParams(location.search);
+    const hash=new URLSearchParams(location.hash.slice(1));
+    const type=hash.get('type')||qs.get('type');
+    const isRecovery=type==='recovery';
+    const errorDescription=hash.get('error_description')||qs.get('error_description');
+    const client=createClient(config.url,config.anonKey,{
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:true}
+    });
+
+    function show(title,message,{download=false,recovery=false,error=false}={}){
+      $('title').textContent=title;
+      $('message').textContent=message;
+      $('password-form').hidden=!recovery;
+      $('download').hidden=!download;
+      $('hint').hidden=!download;
+      if(error){$('error').textContent=message;$('error').hidden=false}
+    }
+    if(errorDescription){
+      show('Не удалось подтвердить ссылку',errorDescription.replace(/\+/g,' '),{error:true,download:true});
+    }else{
+      try{
+        // Supabase JS processes the token from the redirect URL and establishes a session.
+        const {data,error}=await client.auth.getSession();
+        if(error)throw error;
+        if(!data.session)throw Error('Ссылка недействительна или срок её действия истёк. Запросите новое письмо в приложении.');
+        // Remove tokens from the visible URL and browser history after verification.
+        history.replaceState(null,'',location.pathname);
+        if(isRecovery){
+          show('Смена пароля','Придумайте новый пароль, затем войдите в приложение.',{recovery:true});
+        }else{
+          await client.auth.signOut({scope:'local'});
+          show('Почта подтверждена','Ваш адрес электронной почты успешно подтверждён.',{download:true});
+        }
+      }catch(err){
+        show('Не удалось завершить подтверждение',err.message||String(err),{error:true,download:true});
+      }
+    }
+    $('password-form').addEventListener('submit',async event=>{
+      event.preventDefault();
+      $('error').hidden=true;
+      const pass=$('password').value;
+      if(pass.length<8||pass!==$('repeat').value){
+        $('error').textContent='Пароль должен быть от 8 символов, оба поля должны совпадать.';
+        $('error').hidden=false;return;
+      }
+      const button=event.currentTarget.querySelector('button');
+      button.disabled=true;
+      try{
+        const {error}=await client.auth.updateUser({password:pass});
+        if(error)throw error;
+        await client.auth.signOut({scope:'local'});
+        show('Пароль изменён','Теперь можно открыть «Ясно» и войти с новым паролем.',{download:true});
+      }catch(err){
+        $('error').textContent=err.message||String(err);
+        $('error').hidden=false;
+      }finally{button.disabled=false}
+    });
+  </script>
+</body>
+</html>
