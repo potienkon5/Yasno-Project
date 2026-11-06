@@ -108,7 +108,12 @@ async function startApkUpdate(){
  catch(e){updateState=e.message||String(e);toast(updateState)}
  finally{updateBusy=false;draw()}
 }
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isAndroidApk()&&U)checkForApkUpdate(true)});
+let lastUpdateCheck=0;
+function autoCheckApk(){
+ if(!isAndroidApk()||!U?.cls||updateBusy||Date.now()-lastUpdateCheck<300000)return;
+ lastUpdateCheck=Date.now();checkForApkUpdate(false);
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)autoCheckApk()});
 const check=(result)=>{if(result.error)throw result.error;return result.data};
 const rpc=(fn,args={})=>sb.rpc(fn,args).then(check);
 const must=(query)=>query.then(check);
@@ -134,7 +139,7 @@ async function initSession(){
     if(!m){boot=true;S.step=1;draw();return}
     const f=check(await sb.from('families').select('invite_code').eq('id',m.family_id).single());
     U.famCode=f.invite_code;
-    await loadClass();subscribe();boot=true;draw();
+    await loadClass();subscribe();boot=true;draw();setTimeout(autoCheckApk,1500);
   }catch(e){boot=true;toast('Загрузка: '+errorMsg(e));draw()}finally{loading=false}
 }
 async function loadClass(){
@@ -249,7 +254,7 @@ function more(){
   <div class="s" style="margin-top:8px">До 3 учётных записей одной семьи. Все видят одни и те же дела и сборы.</div>
   ${fm.length<3?`<div class="s" style="margin-top:12px">Код семьи</div><div class="code">${esc(U.famCode)}</div><button class="btn o" data-a="shareFam">Позвать в семью</button>`:'<span class="tag ok">Семья заполнена: 3 из 3</span>'}</div>
   <h2>Уже есть код семьи?</h2><input class="f" id="fc" placeholder="Код семьи" maxlength="8" autocapitalize="characters"><div class="btns"><button class="btn o" data-a="joinFam">Присоединиться к семье</button></div>
-  <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">При открытом приложении работают напоминания и оповещения. Для фонового Web Push нужно дополнительно развернуть функцию уведомлений.</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div></div>
+   <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">${isAndroidApk()?'На Android ежедневно напоминаем в 07:30 и 18:00, даже при закрытом приложении. Для мгновенных событий в фоне потребуется отдельная Push-доставка.':'В браузере доступны уведомления при открытом сайте; фоновый Web Push требует серверной настройки.'}</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div></div>
   <h2>Аккаунт</h2><div class="box"><div class="t">${esc(U.name)}</div><div class="s">${esc(U.profile?.school||'')} · ${esc(U.profile?.city||'')}</div><div class="s">Синхронизация по email и паролю</div><button class="lnk" data-a="logout">Выйти</button></div>
   <h2>Обновления Android</h2>${isAndroidApk()?`<div class="box"><div class="t">Обновления через GitHub Releases</div><div class="s" id="apk-update-status">${esc(updateState)}</div><div class="btns"><button class="btn o" data-a="apkCheck" ${updateBusy?'disabled':''}>Проверить обновления</button>${apkUpdate?.updateAvailable?`<button class="btn" data-a="apkInstall" ${updateBusy?'disabled':''}>Скачать и установить ${esc(apkUpdate.latest)}</button>`:''}</div></div>`:'<div class="s">Обновления APK доступны только в Android-сборке.</div>'}
   <h2>Приложение</h2>${installEv?'<button class="btn" data-a="install">Установить на телефон</button>':'<div class="s">В меню браузера выберите «Установить приложение» или «Добавить на главный экран».</div>'}
@@ -341,9 +346,22 @@ const A={
  pushEnable:()=>lock(pushEnable),pushDisable:()=>lock(pushDisable),pushHide:()=>{localStorage.pushHide='1';draw()},
  delAcc:()=>{if(!confirm('Покинуть класс и удалить профиль приложения? Данные входа Supabase Auth останутся, пока администратор не удалит аккаунт на сервере.'))return;lock(async()=>{await rpc('leave_class');await initSession();toast('Вы покинули класс. Для полного удаления учётной записи обратитесь к администратору.')})}
 };
-const pushIs=()=>'Notification' in window&&Notification.permission==='granted'&&!!localStorage.yasnoPush;
-const banner=()=>(!('Notification' in window)||pushIs()||Notification.permission==='denied'||localStorage.pushHide)?'':'<div class="box"><div class="t">Разрешите уведомления</div><div class="s">Уведомления о событиях отображаются при открытом приложении. Для фонового Web Push потребуется серверная функция из инструкции.</div><div class="btns"><button class="btn sm" data-a="pushEnable">Включить</button><button class="btn o sm" data-a="pushHide">Не сейчас</button></div></div>';
+const localAndroid=()=>isAndroidApk()?window.Capacitor?.Plugins?.LocalNotifications:null;
+const pushIs=()=>isAndroidApk()?!!localStorage.yasnoNativeReminders:('Notification' in window&&Notification.permission==='granted'&&!!localStorage.yasnoPush);
+const banner=()=>((!isAndroidApk()&&(!('Notification' in window)||Notification.permission==='denied'))||pushIs()||localStorage.pushHide)?'':'<div class="box"><div class="t">Разрешите уведомления</div><div class="s">'+(isAndroidApk()?'Ежедневные локальные напоминания в 07:30 и 18:00, в том числе при закрытом приложении.':'Уведомления браузера при открытом сайте.')+'</div><div class="btns"><button class="btn sm" data-a="pushEnable">Включить</button><button class="btn o sm" data-a="pushHide">Не сейчас</button></div></div>';
 async function pushEnable(){
+  if(isAndroidApk()){
+    const plugin=localAndroid();
+    if(!plugin)throw Error('Нативный плагин уведомлений не найден. Пересоберите APK с @capacitor/local-notifications.');
+    const permission=await plugin.requestPermissions();
+    if(permission.display!=='granted')throw Error('Разрешите уведомления для «Ясно» в настройках Android');
+    await plugin.cancel({notifications:[{id:730},{id:1800}]});
+    await plugin.schedule({notifications:[
+      {id:730,title:'Ясно · Доброе утро',body:'Проверьте задания и дела на сегодня',schedule:{on:{hour:7,minute:30},repeats:true}},
+      {id:1800,title:'Ясно · Вечернее напоминание',body:'Проверьте задания и сборы на завтра',schedule:{on:{hour:18,minute:0},repeats:true}}
+    ]});
+    localStorage.yasnoNativeReminders='1';toast('Ежедневные напоминания включены');draw();return;
+  }
  if(!('Notification' in window)||!('serviceWorker' in navigator))throw Error('Этот браузер не поддерживает уведомления');
  const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Разрешите уведомления в настройках браузера');
  localStorage.yasnoPush='1';
@@ -358,15 +376,27 @@ async function pushEnable(){
  toast(cfg.vapidPublicKey?'Уведомления разрешены. Фоновая доставка требует запуска серверной функции.':'Уведомления разрешены для открытого приложения');draw();
 }
 async function pushDisable(){
+  if(isAndroidApk()){
+    const plugin=localAndroid();if(plugin)await plugin.cancel({notifications:[{id:730},{id:1800}]});
+    delete localStorage.yasnoNativeReminders;toast('Напоминания выключены');draw();return;
+  }
  try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){check(await sb.from('push_subscriptions').delete().eq('user_id',uid).eq('endpoint',sub.endpoint));await sub.unsubscribe()}}catch(e){console.warn(e)}
  delete localStorage.yasnoPush;toast('Уведомления выключены');draw();
 }
-function announce(title,body){if(!pushIs())return;try{new Notification(title,{body,icon:'icon-192.png'})}catch(e){console.warn(e)}}
+async function announce(title,body){
+ if(!pushIs())return;
+ try{
+  if(isAndroidApk()){
+   const plugin=localAndroid();if(!plugin)return;
+   await plugin.schedule({notifications:[{id:Math.floor(Math.random()*1000000)+2000,title,body,schedule:{at:new Date(Date.now()+1000)}}]});
+  }else new Notification(title,{body,icon:'icon-192.png'});
+ }catch(e){console.warn(e)}
+}
 async function shareIt(text,url){try{if(navigator.share){await navigator.share({title:'Ясно',text,url});return}}catch(e){return}try{await navigator.clipboard.writeText(text+' '+url);toast('Скопировано')}catch(e){toast(text)}}
 document.addEventListener('click',e=>{if(e.target.id==='bg'){close();return}const b=e.target.closest('[data-a]');if(b)A[b.dataset.a]?.(b.dataset)});
 document.addEventListener('input',e=>{if(e.target.id==='q'){S.q=e.target.value;$('#pl').innerHTML=plist()}});
 // Напоминания пока приложение открыто; фоновые гарантии требуют Web Push / нативных планировщиков.
-setInterval(()=>{if(!U||!pushIs())return;const d=new Date();const hh=d.getHours(),mm=d.getMinutes(),key=isoL(d)+'-'+hh;if(!((hh===7&&mm===30)||(hh===18&&mm===0))||localStorage.yasnoReminder===key)return;
+setInterval(()=>{if(!U||!pushIs()||isAndroidApk())return;const d=new Date();const hh=d.getHours(),mm=d.getMinutes(),key=isoL(d)+'-'+hh;if(!((hh===7&&mm===30)||(hh===18&&mm===0))||localStorage.yasnoReminder===key)return;
  localStorage.yasnoReminder=key;const today=hh===7?isoL(d):isoL(new Date(Date.now()+864e5));const count=tasks.filter(x=>!x.done&&x.date===today).length+hw.filter(x=>x.date===today&&!(x.doneBy||[]).includes(U.fam)).length+debts(U.fam);
  if(count)announce('Ясно · '+(hh===7?'На сегодня':'На завтра'),`Задач и неоплаченных сборов: ${count}`);
 },30000);
