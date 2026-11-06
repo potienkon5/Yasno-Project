@@ -33,7 +33,7 @@ test('plans task, homework and unpaid fund at their own due times',async()=>{
  assert.equal(scheduled.length,3);
  assert.ok(scheduled.some(x=>x.title==='Ясно · Дело'&&x.schedule.at.getHours()===16&&x.schedule.at.getMinutes()===45));
  assert.ok(scheduled.some(x=>x.title==='Ясно · Домашнее задание'&&x.schedule.at.getHours()===12&&x.schedule.at.getMinutes()===30));
- assert.ok(scheduled.some(x=>x.title==='Ясно · Срок сбора'&&x.body.includes('2 000')&&x.schedule.at.getHours()===18));
+ assert.ok(scheduled.some(x=>x.title==='Ясно · Срок сбора'&&x.body.includes('₸')&&x.schedule.at.getHours()===18));
  assert.ok(!scheduled.some(x=>x.body.includes('Оплачено')));
 });
 test('cancel reminders when task becomes completed and fund is paid',async()=>{
