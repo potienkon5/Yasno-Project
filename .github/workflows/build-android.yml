@@ -63,6 +63,9 @@ jobs:
       - name: Refresh bundled web files
         working-directory: capacitor
         run: npx cap sync android && node install-native-updater.mjs
+      - name: Generate Android launcher icon
+        working-directory: capacitor
+        run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#101936' --iconBackgroundColorDark '#101936'
       - name: Apply Android version for install-over-existing
         env:
           VERSION: ${{ inputs.version }}
