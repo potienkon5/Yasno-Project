@@ -1,0 +1,53 @@
+name: 3 - Publish iPhone PWA (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'capacitor/www/**'
+      - '.github/workflows/deploy-pwa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: yasno-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate PWA assets
+        run: |
+          set -euo pipefail
+          test -f capacitor/www/index.html
+          test -f capacitor/www/sw.js
+          test -f capacitor/www/manifest.webmanifest
+          test -f capacitor/www/supabase-config.js
+          test -f capacitor/www/icon-192.png
+          test -f capacitor/www/icon-512.png
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('capacitor/www/manifest.webmanifest','utf8'));if(m.display!=='standalone')process.exit(1)"
+          grep -q 'apple-mobile-web-app-capable' capacitor/www/index.html
+          grep -q 'apple-touch-icon' capacitor/www/index.html
+          if grep -R -l 'service_role\|SUPABASE_SERVICE_ROLE_KEY\|YASNO_VAPID_PRIVATE' capacitor/www/; then
+            echo 'Server-only secrets must not be bundled'
+            exit 1
+          fi
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: capacitor/www
+      - name: Publish website
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#14244b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ясно">
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
 <meta name="yasno-build" content="dev">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -271,7 +275,7 @@ function more(){
    <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">${isAndroidApk()?'Уведомления по срокам задач, домашней работы и сборов. Android может требовать отдельного разрешения «Будильники и напоминания».':'Уведомления браузера для открытого сайта.'}</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div>${isAndroidApk()?`<div class="s" style="margin-top:12px">${esc(notificationStatus)}</div><div class="btns"><button class="btn o sm" data-a="notifyStatus">Проверить состояние</button><button class="btn o sm" data-a="notifyTest">Тест через 10 секунд</button><button class="btn o sm" data-a="notifyExact">Разрешить точное время</button></div>`:''}</div>
   <h2>Аккаунт</h2><div class="box"><div class="t">${esc(U.name)}</div><div class="s">${esc(U.profile?.school||'')} · ${esc(U.profile?.city||'')}</div><div class="s">Синхронизация по email и паролю</div><button class="lnk" data-a="logout">Выйти</button></div>
   <h2>Обновления Android</h2>${isAndroidApk()?`<div class="box"><div class="t">Обновления через GitHub Releases</div><div class="s">${esc(apkDiagnostics())}</div><div class="s" id="apk-update-status">${esc(updateState)}</div><div class="btns"><button class="btn o" data-a="apkCheck" ${updateBusy?'disabled':''}>Проверить обновления</button>${apkUpdate?.updateAvailable?`<button class="btn" data-a="apkInstall" ${updateBusy?'disabled':''}>Скачать и установить ${esc(apkUpdate.latest)}</button>`:''}</div></div>`:'<div class="s">Обновления APK доступны только в Android-сборке.</div>'}
-  <h2>Приложение</h2>${installEv?'<button class="btn" data-a="install">Установить на телефон</button>':'<div class="s">В меню браузера выберите «Установить приложение» или «Добавить на главный экран».</div>'}
+  <h2>Приложение</h2>${isIosBrowser() && !isStandalonePwa()?'<div class="box"><div class="t">Установка на iPhone</div><div class="s">Откройте «Ясно» в Safari. Нажмите «Поделиться» → «На экран Домой» → «Добавить». Запускайте приложение с созданной иконки.</div></div>':''}${installEv?'<button class="btn" data-a="install">Установить на телефон</button>':'<div class="s">В меню браузера выберите «Установить приложение» или «Добавить на главный экран».</div>'}
   <div class="btns"><button class="btn o sm" data-a="tour">Показать подсказки снова</button></div>
   <h2>Данные</h2><a class="lnk" href="privacy.html" target="_blank">Политика конфиденциальности</a><div class="btns"><button class="btn o sm" data-a="delAcc">Покинуть класс</button></div>`;
 }
@@ -363,6 +367,8 @@ const A={
  notifyExact:()=>lock(async()=>{await requestExactReminderPermission();notificationStatus='Проверьте разрешение «Будильники и напоминания», вернитесь в Ясно и нажмите «Проверить состояние».';draw()}),
  delAcc:()=>{if(!confirm('Покинуть класс и удалить профиль приложения? Данные входа Supabase Auth останутся, пока администратор не удалит аккаунт на сервере.'))return;lock(async()=>{if(isAndroidApk())await clearDeadlineReminders();await rpc('leave_class');await initSession();toast('Вы покинули класс. Для полного удаления учётной записи обратитесь к администратору.')})}
 };
+const isIosBrowser=()=>/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isStandalonePwa=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 const localAndroid=()=>isAndroidApk()?window.Capacitor?.Plugins?.LocalNotifications:null;
 const pushIs=()=>isAndroidApk()?!!localStorage.yasnoNativeReminders:('Notification' in window&&Notification.permission==='granted'&&!!localStorage.yasnoPush);
 const banner=()=>((!isAndroidApk()&&(!('Notification' in window)||Notification.permission==='denied'))||pushIs()||localStorage.pushHide)?'':'<div class="box"><div class="t">Разрешите уведомления</div><div class="s">'+(isAndroidApk()?'Напоминания к срокам задач, домашних заданий и сборов на этом телефоне.':'Уведомления браузера при открытом сайте.')+'</div><div class="btns"><button class="btn sm" data-a="pushEnable">Включить</button><button class="btn o sm" data-a="pushHide">Не сейчас</button></div></div>';
@@ -377,8 +383,9 @@ async function pushEnable(){
     toast('Напоминания по срокам включены: '+result.scheduled);draw();return;
   }
  if(!('Notification' in window)||!('serviceWorker' in navigator))throw Error('Этот браузер не поддерживает уведомления');
+ if(isIosBrowser() && !isStandalonePwa())throw Error('Сначала добавьте «Ясно» на экран Домой и откройте с иконки.');
+ if(!cfg.vapidPublicKey)throw Error('Фоновые Web Push ещё не настроены: нужен публичный VAPID-ключ и сервер отправки.');
  const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Разрешите уведомления в настройках браузера');
- localStorage.yasnoPush='1';
  if(cfg.vapidPublicKey){
   const reg=await navigator.serviceWorker.ready;
   const base64=cfg.vapidPublicKey.replace(/-/g,'+').replace(/_/g,'/');
@@ -387,7 +394,8 @@ async function pushEnable(){
   const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
   check(await sb.from('push_subscriptions').upsert({user_id:uid,endpoint:sub.endpoint,subscription:sub.toJSON()},{onConflict:'user_id,endpoint'}));
  }
- toast(cfg.vapidPublicKey?'Уведомления разрешены. Фоновая доставка требует запуска серверной функции.':'Уведомления разрешены для открытого приложения');draw();
+ localStorage.yasnoPush='1';
+ toast('Подписка на Web Push сохранена. Для доставки нужна работающая серверная функция.');draw();
 }
 async function pushDisable(){
   if(isAndroidApk()){
