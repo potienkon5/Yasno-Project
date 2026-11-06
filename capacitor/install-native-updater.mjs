@@ -20,6 +20,11 @@ if(!src.includes('registerPlugin(YasnoUpdaterPlugin.class)')){
 let m=fs.readFileSync(manifest,'utf8');
 if(!m.includes('android.permission.REQUEST_INSTALL_PACKAGES'))m=m.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application');
 if(!m.includes('android.permission.SCHEDULE_EXACT_ALARM'))m=m.replace('<application', '<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n    <application');
-if(!m.includes('androidx.core.content.FileProvider'))m=m.replace('</application>',`    <provider\n        android:name="androidx.core.content.FileProvider"\n        android:authorities="\${applicationId}.updateprovider"\n        android:exported="false"\n        android:grantUriPermissions="true">\n        <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />\n    </provider>\n  </application>`);
+// Capacitor's Android template already registers ${applicationId}.fileprovider
+// with @xml/file_paths (including a cache-path). Reuse it instead of
+// registering a second provider with the same Java class name.
+if(!m.includes('${applicationId}.fileprovider'))throw Error('В AndroidManifest.xml отсутствует стандартный FileProvider Capacitor (.fileprovider)');
+const bundledPaths=path.join(android,'app/src/main/res/xml/file_paths.xml');
+if(!fs.existsSync(bundledPaths)||!fs.readFileSync(bundledPaths,'utf8').includes('<cache-path'))throw Error('file_paths.xml должен разрешать cache-path для APK в cache/updates');
 fs.writeFileSync(manifest,m);
 console.log('YasnoUpdater: Java-плагин, FileProvider, AndroidManifest и MainActivity подготовлены.');
