@@ -73,7 +73,7 @@ textarea,input.f,select.f{width:100%;border:1.5px solid var(--line);border-radiu
 <script type="module">
 import cfg from './supabase-config.js';
 import {isAndroidApk,checkApkUpdate,installApkUpdate,apkDiagnostics} from './apk-updater.js';
-import {syncDeadlineReminders,clearDeadlineReminders} from './deadline-reminders.js';
+import {syncDeadlineReminders,clearDeadlineReminders,getReminderDiagnostics,testReminder,requestExactReminderPermission} from './deadline-reminders.js';
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',gen=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>AL[b%AL.length]).join('');
@@ -105,6 +105,7 @@ if(isAndroidApk() && 'serviceWorker' in navigator){
 let apkUpdate=null;
 let updateBusy=false;
 let updateState='Нажмите «Проверить обновления»';
+let notificationStatus='Нажмите «Проверить состояние», чтобы увидеть разрешения и очередь Android.';
 async function checkForApkUpdate(silent=false){
  if(!isAndroidApk()||updateBusy)return;
  updateBusy=true; updateState='Проверяем GitHub Releases…'; if(S.tab==='more')draw();
@@ -167,7 +168,7 @@ async function loadClass(){
  mem=mm.map(m=>{const p=lookup.get(m.user_id)||{};return {id:m.user_id,admin:m.is_admin,fam:m.family_id,name:[p.first_name,p.last_name].filter(Boolean).join(' ')||'Родитель',phone:p.phone||'',kid:[p.child_first,p.child_last].filter(Boolean).join(' ')||''}});
  const reshape=x=>({id:x.id,t:new Date(x.created_at).getTime(),...x.payload});
  tasks=items.filter(x=>x.kind==='tasks').map(reshape);hw=items.filter(x=>x.kind==='homework').map(reshape);funds=items.filter(x=>x.kind==='funds').map(reshape);
- if(isAndroidApk()&&pushIs())syncDeadlineReminders({userId:uid,classCode:U.cls,familyId:U.fam,tasks,homework:hw,funds}).catch(e=>console.warn('Не удалось обновить напоминания:',e));
+ if(isAndroidApk()&&pushIs())syncDeadlineReminders({userId:uid,classCode:U.cls,familyId:U.fam,tasks,homework:hw,funds}).then(s=>{notificationStatus='Запланировано напоминаний: '+s.scheduled;if(S.tab==='more')draw()}).catch(e=>{notificationStatus='Ошибка планирования: '+(e.message||String(e));if(S.tab==='more')draw();console.warn('Не удалось обновить напоминания:',e)});
  if(boot)draw();
 }
 let pendingRefresh=false;
@@ -267,7 +268,7 @@ function more(){
   <div class="s" style="margin-top:8px">До 3 учётных записей одной семьи. Все видят одни и те же дела и сборы.</div>
   ${fm.length<3?`<div class="s" style="margin-top:12px">Код семьи</div><div class="code">${esc(U.famCode)}</div><button class="btn o" data-a="shareFam">Позвать в семью</button>`:'<span class="tag ok">Семья заполнена: 3 из 3</span>'}</div>
   <h2>Уже есть код семьи?</h2><input class="f" id="fc" placeholder="Код семьи" maxlength="8" autocapitalize="characters"><div class="btns"><button class="btn o" data-a="joinFam">Присоединиться к семье</button></div>
-   <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">${isAndroidApk()?'Уведомления на дату и время каждого невыполненного дела, домашнего задания и неоплаченного сбора. Если время не задано — 09:00. Для мгновенных событий при закрытом приложении нужна отдельная серверная Push-доставка.':'Уведомления браузера для открытого сайта.'}</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div></div>
+   <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">${isAndroidApk()?'Уведомления по срокам дел, домашней работы и сборов. Android может требовать отдельного разрешения «Будильники и напоминания».':'Уведомления браузера для открытого сайта.'}</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div>${isAndroidApk()?`<div class="s" style="margin-top:12px">${esc(notificationStatus)}</div><div class="btns"><button class="btn o sm" data-a="notifyStatus">Проверить состояние</button><button class="btn o sm" data-a="notifyTest">Тест через 10 секунд</button><button class="btn o sm" data-a="notifyExact">Разрешить точное время</button></div>`:''}</div>
   <h2>Аккаунт</h2><div class="box"><div class="t">${esc(U.name)}</div><div class="s">${esc(U.profile?.school||'')} · ${esc(U.profile?.city||'')}</div><div class="s">Синхронизация по email и паролю</div><button class="lnk" data-a="logout">Выйти</button></div>
   <h2>Обновления Android</h2>${isAndroidApk()?`<div class="box"><div class="t">Обновления через GitHub Releases</div><div class="s">${esc(apkDiagnostics())}</div><div class="s" id="apk-update-status">${esc(updateState)}</div><div class="btns"><button class="btn o" data-a="apkCheck" ${updateBusy?'disabled':''}>Проверить обновления</button>${apkUpdate?.updateAvailable?`<button class="btn" data-a="apkInstall" ${updateBusy?'disabled':''}>Скачать и установить ${esc(apkUpdate.latest)}</button>`:''}</div></div>`:'<div class="s">Обновления APK доступны только в Android-сборке.</div>'}
   <h2>Приложение</h2>${installEv?'<button class="btn" data-a="install">Установить на телефон</button>':'<div class="s">В меню браузера выберите «Установить приложение» или «Добавить на главный экран».</div>'}
@@ -357,6 +358,9 @@ const A={
  apkCheck:()=>checkForApkUpdate(false),apkInstall:()=>startApkUpdate(),
  install:async()=>{if(installEv){await installEv.prompt();installEv=null;draw()}},tour:()=>tour(true),
  pushEnable:()=>lock(pushEnable),pushDisable:()=>lock(pushDisable),pushHide:()=>{localStorage.pushHide='1';draw()},
+ notifyStatus:()=>lock(async()=>{const s=await getReminderDiagnostics();notificationStatus=`Уведомления: ${s.permission||'неизвестно'} · в очереди Android: ${s.scheduled} · точные будильники: ${s.exact}`;draw()}),
+ notifyTest:()=>lock(async()=>{const s=await testReminder();notificationStatus=s.scheduled?'Тест запланирован на 10 секунд. Точное время: '+s.exact:'Android не подтвердил тестовое уведомление в очереди';draw()}),
+ notifyExact:()=>lock(async()=>{await requestExactReminderPermission();notificationStatus='Проверьте разрешение «Будильники и напоминания», вернитесь в Ясно и нажмите «Проверить состояние».';draw()}),
  delAcc:()=>{if(!confirm('Покинуть класс и удалить профиль приложения? Данные входа Supabase Auth останутся, пока администратор не удалит аккаунт на сервере.'))return;lock(async()=>{if(isAndroidApk())await clearDeadlineReminders();await rpc('leave_class');await initSession();toast('Вы покинули класс. Для полного удаления учётной записи обратитесь к администратору.')})}
 };
 const localAndroid=()=>isAndroidApk()?window.Capacitor?.Plugins?.LocalNotifications:null;
