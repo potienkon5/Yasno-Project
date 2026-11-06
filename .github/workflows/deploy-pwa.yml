@@ -35,7 +35,7 @@ jobs:
           test -f capacitor/www/supabase-config.js
           test -f capacitor/www/icon-192.png
           test -f capacitor/www/icon-512.png
-          node -e "const m=require('./capacitor/www/manifest.webmanifest'); if (m.display!=='standalone') process.exit(1)" || node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('capacitor/www/manifest.webmanifest'));if(m.display!=='standalone')process.exit(1)"
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('capacitor/www/manifest.webmanifest','utf8'));if(m.display!=='standalone')process.exit(1)"
           grep -q 'apple-mobile-web-app-capable' capacitor/www/index.html
           grep -q 'apple-touch-icon' capacitor/www/index.html
           if grep -R -l 'service_role\|SUPABASE_SERVICE_ROLE_KEY\|YASNO_VAPID_PRIVATE' capacitor/www/; then
