@@ -117,7 +117,7 @@ public class YasnoUpdaterPlugin extends Plugin {
         long newCode = Build.VERSION.SDK_INT >= 28 ? apk.getLongVersionCode() : apk.versionCode;
         long currentCode = Build.VERSION.SDK_INT >= 28 ? current.getLongVersionCode() : current.versionCode;
         if (newCode <= currentCode) throw new Exception("versionCode новой сборки должен быть больше текущего");
-        Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".updateprovider", file);
+        Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", file);
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(uri, "application/vnd.android.package-archive");
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
