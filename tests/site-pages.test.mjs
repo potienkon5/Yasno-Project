@@ -14,7 +14,7 @@ test('landing has both actual install routes and real product information',()=>{
  assert.match(landing,/meta name="viewport"/);
  assert.match(landing,/id="android-download"/);
  assert.match(landing,/https:\/\/github\.com\/potienkon5\/Yasno-Project\/releases\/latest\/download\/yasno-release\.apk/);
- assert.match(landing,/id="ios-open"[^>]+href="\.\/app\/"/);
+ assert.match(landing,/<a[^>]*href="\.\/app\/"[^>]*id="ios-open"/);
  assert.match(landing,/Safari/);
  assert.match(landing,/На экран/);
  assert.match(landing,/Домашние задания/);
