@@ -70,6 +70,23 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: python3 .github/scripts/set_android_version.py "${VERSION}"
+        
+      - name: Verify updater bundled into Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE="capacitor/android/app/src/main/assets/public/apk-updater.js"
+
+          test -f "$FILE" || {
+            echo "ERROR: apk-updater.js missing in APK assets"
+            exit 1
+          }
+
+          grep -Fq "GITHUB_OWNER = 'potienkon5'" "$FILE"
+          grep -Fq "GITHUB_REPO = 'Yasno-Project'" "$FILE"
+
+          echo "SUCCESS: correct GitHub settings bundled"
+
       - name: Compile release APK
         working-directory: capacitor/android
         run: bash ./gradlew --no-daemon assembleRelease
