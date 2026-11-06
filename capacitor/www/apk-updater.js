@@ -3,7 +3,7 @@
 export const GITHUB_OWNER = 'potienkon5';
 export const GITHUB_REPO = 'Yasno-Project';
 const APK_NAME = 'yasno-release.apk';
-export const apkDiagnostics=()=>`Источник APK: ${GITHUB_OWNER}/${GITHUB_REPO} · модуль обновления v2`;
+export const apkDiagnostics=()=>`Источник APK: ${GITHUB_OWNER}/${GITHUB_REPO} · сборка ${document.querySelector('meta[name="yasno-build"]')?.content||'неизвестна'} · модуль v2`;
 const native = () => window.Capacitor?.Plugins?.YasnoUpdater || null;
 const versionParts = s => String(s||'').replace(/^v/i,'').split('.').map(x=>Number(x));
 function isNewer(candidate,current){
