@@ -79,9 +79,17 @@ jobs:
       - name: Refresh bundled web files
         working-directory: capacitor
         run: npx cap sync android && node install-native-updater.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Remove black padding from launcher icon
+        working-directory: capacitor
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          python fix-icon-background.py
       - name: Generate Android launcher icon
         working-directory: capacitor
-        run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#101936' --iconBackgroundColorDark '#101936'
+        run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#283771' --iconBackgroundColorDark '#283771'
       - name: Apply Android version for install-over-existing
         env:
           VERSION: ${{ inputs.version }}
