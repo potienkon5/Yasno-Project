@@ -383,9 +383,9 @@ async function pushEnable(){
     toast('Напоминания по срокам включены: '+result.scheduled);draw();return;
   }
  if(!('Notification' in window)||!('serviceWorker' in navigator))throw Error('Этот браузер не поддерживает уведомления');
- const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Разрешите уведомления в настройках браузера');
- if(!cfg.vapidPublicKey)throw Error('Фоновые Web Push ещё не настроены: нужен публичный VAPID-ключ и сервер отправки.');
  if(isIosBrowser() && !isStandalonePwa())throw Error('Сначала добавьте «Ясно» на экран Домой и откройте с иконки.');
+ if(!cfg.vapidPublicKey)throw Error('Фоновые Web Push ещё не настроены: нужен публичный VAPID-ключ и сервер отправки.');
+ const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Разрешите уведомления в настройках браузера');
  if(cfg.vapidPublicKey){
   const reg=await navigator.serviceWorker.ready;
   const base64=cfg.vapidPublicKey.replace(/-/g,'+').replace(/_/g,'/');
