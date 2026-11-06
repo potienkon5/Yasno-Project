@@ -199,7 +199,7 @@ function regView(){
    <label class="fieldlabel">Электронная почта</label><input class="f" id="email" type="email" autocomplete="email" placeholder="name@example.com">
    <label class="fieldlabel">Пароль</label><input class="f" id="password" type="password" autocomplete="current-password" placeholder="Введите пароль">
    <div class="err" id="err"></div><div class="btns"><button class="btn wide" data-a="login">Войти</button></div>
-   <button class="lnk" data-a="forgot">Забыли пароль?</button><br><button class="lnk" data-a="showRegister">Создать аккаунт</button></div>`;
+   <button class="lnk" data-a="forgot">Забыли пароль?</button><br><button class="lnk" data-a="resendConfirmation">Отправить письмо подтверждения повторно</button><br><button class="lnk" data-a="showRegister">Создать аккаунт</button></div>`;
   return `<div class="reg"><div class="logo">Ясно</div><h3>Регистрация родителя</h3><p class="s">Создайте защищённую учётную запись. Поля со звёздочкой обязательны.</p>
    <h2>Данные взрослого</h2>
    <label class="fieldlabel">Имя *</label><input class="f" id="n1" autocomplete="given-name" placeholder="Имя" value="${esc(r.first_name)}">
@@ -336,7 +336,8 @@ const A={
  }),
  setPassword:()=>lock(async()=>{const pwd=v('newpassword');if(pwd.length<8||pwd!==v('newpassword2'))throw Error('Пароль от 8 символов, оба поля должны совпадать');check(await sb.auth.updateUser({password:pwd}));S.mode='login';toast('Пароль изменён');await initSession()}),
  login:()=>lock(async()=>{const email=v('email'),password=v('password');if(!email||!password)throw Error('Введите email и пароль');check(await sb.auth.signInWithPassword({email,password}));await initSession()}),
- forgot:()=>lock(async()=>{const email=v('email');if(!email)throw Error('Укажите email в поле выше');check(await sb.auth.resetPasswordForEmail(email,{redirectTo:AUTH_EMAIL_CALLBACK}));toast('Если адрес зарегистрирован, на него отправлено письмо для восстановления')}),
+ resendConfirmation:()=>lock(async()=>{const email=v('email').toLowerCase();if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))throw Error('Укажите email в поле выше');check(await sb.auth.resend({type:'signup',email,options:{emailRedirectTo:AUTH_EMAIL_CALLBACK}}));toast('Если адрес ожидает подтверждения, отправлено новое письмо')}),
+  forgot:()=>lock(async()=>{const email=v('email');if(!email)throw Error('Укажите email в поле выше');check(await sb.auth.resetPasswordForEmail(email,{redirectTo:AUTH_EMAIL_CALLBACK}));toast('Если адрес зарегистрирован, на него отправлено письмо для восстановления')}),
  logout:()=>lock(async()=>{if(isAndroidApk())await clearDeadlineReminders();check(await sb.auth.signOut());uid=null;U=null;S.mode='login';draw()}),
  tab:d=>{S.tab=d.v;draw()},sub:d=>{S.sub=d.v;draw()},flt:d=>{S.f=d.v;draw()},sheet:d=>sheet(d.k),
  makeClass:()=>lock(async()=>{const code=await rpc('create_class',{p_grade:U.kidClass});toast('Класс создан: '+code);await initSession()}),
