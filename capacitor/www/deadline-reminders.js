@@ -63,11 +63,51 @@ async function doSync({userId,classCode,familyId,tasks=[],homework=[],funds=[]})
   const chosen=planned.slice(0,MAX_REMINDERS);
   const signature=JSON.stringify({userId,classCode,familyId,items:chosen.map(x=>[x.id,x.title,x.body,x.schedule.at.getTime()])});
   const previous=readPrevious();
-  if(previous.signature===signature)return {scheduled:chosen.length};
+  if(previous.signature===signature){
+    // Android may discard alarms after a permission change or app update.
+    // Never trust only the old localStorage signature.
+    const pending=await p.getPending();
+    const actual=new Set((pending.notifications||[]).map(x=>x.id));
+    if(chosen.every(x=>actual.has(x.id)))return {scheduled:chosen.length};
+  }
   await cancelNotifications(p,previous.ids||[]);
   await cancelNotifications(p,[730,1800]);
   localStorage.removeItem(KEY);
-  if(chosen.length)await p.schedule({notifications:chosen});
+  if(chosen.length){
+    let exact={value:'granted'};
+    try{exact=await p.checkExactNotificationSetting()}catch(e){console.warn('Exact alarm setting:',e)}
+    if(exact.value!=='granted'){
+      // On Android 12+ this allows less precise reminders instead of losing all alarms.
+      chosen.forEach(x=>x.schedule.allowWhileIdle=false);
+    }
+    await p.schedule({notifications:chosen});
+  }
   localStorage.setItem(KEY,JSON.stringify({signature,ids:chosen.map(x=>x.id)}));
   return {scheduled:chosen.length,limitReached:planned.length>MAX_REMINDERS};
+}
+
+// Visible diagnostics for the Android app Settings screen.
+export async function getReminderDiagnostics(){
+ const p=plugin();if(!p)return {supported:false,scheduled:0,exact:'unknown'};
+ const [perm,pending,exact]=await Promise.all([
+   p.checkPermissions(),
+   p.getPending(),
+   p.checkExactNotificationSetting().catch(()=>({value:'unknown'}))
+ ]);
+ return {supported:true,permission:perm.display,scheduled:(pending.notifications||[]).length,exact:exact.value||'unknown'};
+}
+export async function testReminder(){
+ const p=plugin();if(!p)throw Error('Нативный плагин уведомлений не найден');
+ const perm=await p.requestPermissions();if(perm.display!=='granted')throw Error('Разрешите уведомления Android');
+ const exact=await p.checkExactNotificationSetting().catch(()=>({value:'unknown'}));
+ const at=new Date(Date.now()+10000);
+ const alarm={id:1999990000,title:'Ясно · Проверка уведомлений',body:'Тест успешен. Можно планировать задания и сборы.',schedule:{at,allowWhileIdle:exact.value==='granted'}};
+ await p.cancel({notifications:[{id:alarm.id}]});
+ await p.schedule({notifications:[alarm]});
+ const pending=await p.getPending();
+ return {scheduled:(pending.notifications||[]).some(x=>x.id===alarm.id),exact:exact.value};
+}
+export async function requestExactReminderPermission(){
+ const p=plugin();if(!p)throw Error('Нативный плагин не найден');
+ return p.changeExactNotificationSetting();
 }
