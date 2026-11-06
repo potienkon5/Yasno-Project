@@ -13,12 +13,13 @@ fs.mkdirSync(path.dirname(paths),{recursive:true});
 fs.copyFileSync(path.join(root,'native/xml/update_paths.xml'),paths);
 let src=fs.readFileSync(main,'utf8');
 if(!src.includes('registerPlugin(YasnoUpdaterPlugin.class)')){
-  src=src.replace(/public\s+class\s+MainActivity\s+extends\s+BridgeActivity\s*\{/,x=>`${x}\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(YasnoUpdaterPlugin.class);\n        super.onCreate(savedInstanceState);\n    }`);
+  src=src.replace(/public\s+class\s+MainActivity\s+extends\s+BridgeActivity\s*\{/,x=>`${x}\n    @Override\n    public void onCreate(android.os.Bundle savedInstanceState) {\n        registerPlugin(YasnoUpdaterPlugin.class);\n        super.onCreate(savedInstanceState);\n        // Clear only the WebView HTTP cache. Keep cookies, login session and app data.\n        getBridge().getWebView().clearCache(true);\n        getBridge().getWebView().getSettings().setCacheMode(android.webkit.WebSettings.LOAD_NO_CACHE);\n    }`);
   if(!src.includes('registerPlugin(YasnoUpdaterPlugin.class)'))throw Error('Не удалось зарегистрировать плагин в MainActivity');
   fs.writeFileSync(main,src);
 }
 let m=fs.readFileSync(manifest,'utf8');
 if(!m.includes('android.permission.REQUEST_INSTALL_PACKAGES'))m=m.replace('<application', '<uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <application');
+if(!m.includes('android.permission.SCHEDULE_EXACT_ALARM'))m=m.replace('<application', '<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n    <application');
 if(!m.includes('androidx.core.content.FileProvider'))m=m.replace('</application>',`    <provider\n        android:name="androidx.core.content.FileProvider"\n        android:authorities="\${applicationId}.updateprovider"\n        android:exported="false"\n        android:grantUriPermissions="true">\n        <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />\n    </provider>\n  </application>`);
 fs.writeFileSync(manifest,m);
 console.log('YasnoUpdater: Java-плагин, FileProvider, AndroidManifest и MainActivity подготовлены.');
