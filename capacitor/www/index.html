@@ -351,8 +351,8 @@ const A={
  parse(){pend=parse(v('ct'));if(!pend.length){toast('Ничего важного не нашли');return}
   $('#sheet').innerHTML='<div class="grab"></div><h3>Нашли: '+pend.length+'</h3>'+pend.map(p=>`<div class="it"><div class="bd"><div class="s">${{hw:'Домашка',fund:'Сбор',task:'Дело'}[p.k]}</div><div class="t">${esc(p.title||p.text)}</div><div class="s">${esc(fmtD(p.date))}${p.amount?' · '+rub(p.amount):''}</div></div></div>`).join('')+'<div class="btns"><button class="btn wide" data-a="addAll">Добавить всё</button></div>'},
  addAll:()=>lock(async()=>{for(const p of pend){if(p.k==='hw')await saveItem('homework',{subj:p.subj,text:p.text,date:p.date||'',doneBy:[]});else if(p.k==='fund')await saveItem('funds',{title:p.title,amount:p.amount,date:p.date||'',paid:{}});else await saveItem('tasks',{title:p.title,date:p.date||'',when:'',byName:U.name,done:false})}pend=[];close();S.tab='home';draw()}),
- share:()=>shareIt('Присоединяйтесь к нашему классу в «Ясно». Код класса: '+U.cls+(isAndroidApk()?'\nУстановите APK по ссылке, затем введите код класса.':''),inviteUrl('code',U.cls)),
- shareFam:()=>shareIt('Код нашей семьи в «Ясно»: '+U.famCode+(isAndroidApk()?'\nУстановите APK, затем войдите в аккаунт и введите код семьи.':''),inviteUrl()),
+ share:()=>shareIt('Присоединяйтесь к нашему классу в «Ясно». Код класса: '+U.cls+(isAndroidApk()?'\nСкачайте APK по ссылке без регистрации на GitHub. Установите приложение и введите код класса. Если открывается GitHub, выберите «Открыть в браузере».':''),inviteUrl('code',U.cls)),
+ shareFam:()=>shareIt('Код нашей семьи в «Ясно»: '+U.famCode+(isAndroidApk()?'\nСкачайте APK без регистрации на GitHub, установите приложение, войдите и введите код семьи. Если открывается GitHub, выберите «Открыть в браузере».':''),inviteUrl()),
  joinFam:()=>lock(async()=>{const code=v('fc').toUpperCase();if(!/^[A-Z2-9]{8}$/.test(code))throw Error('Код семьи состоит из восьми символов');await rpc('join_family',{p_code:code});await initSession();toast('Семья подключена')}),
  makeAdmin:d=>{if(!confirm('Передать управление этим родителю?'))return;lock(async()=>{await rpc('transfer_admin',{p_new_admin:d.id});await initSession();toast('Права переданы')})},
  apkCheck:()=>checkForApkUpdate(false),apkInstall:()=>startApkUpdate(),
@@ -406,7 +406,7 @@ async function announce(title,body){
   }else new Notification(title,{body,icon:'icon-192.png'});
  }catch(e){console.warn(e)}
 }
-const installUrl='https://github.com/potienkon5/Yasno-Project/releases/latest';
+const installUrl='https://github.com/potienkon5/Yasno-Project/releases/latest/download/yasno-release.apk';
 function inviteUrl(param,value){
  if(isAndroidApk()||location.hostname==='localhost'||location.hostname==='127.0.0.1')return installUrl;
  const u=new URL(location.pathname,location.origin);
