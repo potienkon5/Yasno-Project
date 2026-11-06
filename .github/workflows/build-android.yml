@@ -85,7 +85,14 @@ jobs:
           grep -Fq "GITHUB_OWNER = 'potienkon5'" "$FILE"
           grep -Fq "GITHUB_REPO = 'Yasno-Project'" "$FILE"
 
-          echo "SUCCESS: correct GitHub settings bundled"
+          if grep -q "REPLACE_WITH_GITHUB_USERNAME" "$FILE"; then
+            echo "ERROR: placeholder GitHub owner remains inside Android assets"
+            exit 1
+          fi
+          test -f capacitor/android/app/src/main/java/kz/yasno/classroom/YasnoUpdaterPlugin.java
+          test -f capacitor/android/app/src/main/assets/public/index.html
+          grep -Fq "LocalNotifications" capacitor/android/app/src/main/assets/public/index.html
+          echo "SUCCESS: correct GitHub settings, native updater and Android notifications bundled"
 
       - name: Compile release APK
         working-directory: capacitor/android
