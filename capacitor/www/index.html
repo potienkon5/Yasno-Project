@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#14244b">
+<meta name="yasno-build" content="dev">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <title>Ясно</title>
@@ -71,7 +72,8 @@ textarea,input.f,select.f{width:100%;border:1.5px solid var(--line);border-radiu
 <div id="app"></div><div id="bg"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div><div id="toast" role="status"></div>
 <script type="module">
 import cfg from './supabase-config.js';
-import {isAndroidApk,checkApkUpdate,installApkUpdate} from './apk-updater.js';
+import {isAndroidApk,checkApkUpdate,installApkUpdate,apkDiagnostics} from './apk-updater.js';
+import {syncDeadlineReminders,clearDeadlineReminders} from './deadline-reminders.js';
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',gen=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>AL[b%AL.length]).join('');
@@ -90,6 +92,16 @@ const S={tab:'home',sub:'t',step:0,mode:'register',reg:{},q:'',f:''};
 let uid=null,U=null,C=null,mem=[],tasks=[],hw=[],funds=[],boot=false,installEv=null,channel=null,loading=false;
 addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e;draw()});
 if(!isAndroidApk() && 'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.warn);
+if(isAndroidApk() && 'serviceWorker' in navigator){
+ // Android APK использует встроенные файлы, а не PWA-кеш старой версии.
+ navigator.serviceWorker.getRegistrations().then(async regs=>{
+   if(regs.length){
+     await Promise.all(regs.map(x=>x.unregister()));
+     if('caches' in window)await Promise.all((await caches.keys()).map(key=>caches.delete(key)));
+     if(!sessionStorage.yasnoSwCleanup){sessionStorage.yasnoSwCleanup='1';location.reload()}
+   }
+ }).catch(e=>console.warn('Service worker cleanup:',e));
+}
 let apkUpdate=null;
 let updateBusy=false;
 let updateState='Нажмите «Проверить обновления»';
@@ -127,7 +139,7 @@ async function initSession(){
   try {
     const {data:{session},error}=await sb.auth.getSession();if(error)throw error;
     uid=session?.user.id||null;
-    if(!uid){U=null;C=null;mem=[];tasks=[];hw=[];funds=[];channel&&sb.removeChannel(channel);channel=null;boot=true;draw();return}
+    if(!uid){if(isAndroidApk())clearDeadlineReminders().catch(console.warn);U=null;C=null;mem=[];tasks=[];hw=[];funds=[];channel&&sb.removeChannel(channel);channel=null;boot=true;draw();return}
     const md=session.user.user_metadata||{};
     let p=check(await sb.from('profiles').select('*').eq('id',uid).maybeSingle());
     if(!p && md.first_name){
@@ -155,6 +167,7 @@ async function loadClass(){
  mem=mm.map(m=>{const p=lookup.get(m.user_id)||{};return {id:m.user_id,admin:m.is_admin,fam:m.family_id,name:[p.first_name,p.last_name].filter(Boolean).join(' ')||'Родитель',phone:p.phone||'',kid:[p.child_first,p.child_last].filter(Boolean).join(' ')||''}});
  const reshape=x=>({id:x.id,t:new Date(x.created_at).getTime(),...x.payload});
  tasks=items.filter(x=>x.kind==='tasks').map(reshape);hw=items.filter(x=>x.kind==='homework').map(reshape);funds=items.filter(x=>x.kind==='funds').map(reshape);
+ if(isAndroidApk()&&pushIs())syncDeadlineReminders({userId:uid,classCode:U.cls,familyId:U.fam,tasks,homework:hw,funds}).catch(e=>console.warn('Не удалось обновить напоминания:',e));
  if(boot)draw();
 }
 let pendingRefresh=false;
@@ -211,9 +224,9 @@ function regView(){
   <div class="box"><div class="t">Я создаю класс</div><div class="s">Вы получите код, чтобы пригласить родителей.</div><div class="btns"><button class="btn o wide" data-a="makeClass">Создать ${esc(U?.kidClass||'мой класс')}</button></div></div>
   <div class="err" id="err"></div><button class="lnk" data-a="logout">Выйти из аккаунта</button></div>`;
 }
-function taskRow(t){return `<div class="it${t.done?' done':''}"><button class="bx" data-a="tdone" data-id="${t.id}" aria-label="Выполнено">${t.done?ic('check'):''}</button><div class="bd"><div class="t">${esc(t.title)}</div><div class="s">${esc(t.byName||'')}${t.takenBy?' · взял(а): '+esc(t.takenBy):''}</div>${tg(t.date,t.when)}
+function taskRow(t){return `<div class="it${t.done?' done':''}"><button class="bx" data-a="tdone" data-id="${t.id}" aria-label="Выполнено">${t.done?ic('check'):''}</button><div class="bd"><div class="t">${esc(t.title)}</div><div class="s">${esc(t.byName||'')}${t.takenBy?' · взял(а): '+esc(t.takenBy):''}</div>${tg(t.date,[t.time,t.when].filter(Boolean).join(' · '))}
   <div>${!t.takenBy&&!t.done?`<button class="lnk" data-a="take" data-id="${t.id}">Беру на себя</button> `:''}${(adm()||t.by===uid)?`<button class="lnk" style="margin-left:14px;color:var(--mute)" data-a="del" data-c="tasks" data-id="${t.id}">Удалить</button>`:''}</div></div></div>`}
-function hwRow(x){const d=(x.doneBy||[]).includes(U.fam);return `<div class="it${d?' done':''}"><button class="bx" data-a="hdone" data-id="${x.id}" aria-label="Выполнено">${d?ic('check'):''}</button><div class="bd"><div class="s" style="margin:0 0 2px;font-weight:600">${esc(x.subj)}</div><div class="t">${esc(x.text)}</div>${tg(x.date,x.due)}${(adm()||x.by===uid)?`<div><button class="lnk" style="color:var(--mute)" data-a="del" data-c="homework" data-id="${x.id}">Удалить</button></div>`:''}</div></div>`}
+function hwRow(x){const d=(x.doneBy||[]).includes(U.fam);return `<div class="it${d?' done':''}"><button class="bx" data-a="hdone" data-id="${x.id}" aria-label="Выполнено">${d?ic('check'):''}</button><div class="bd"><div class="s" style="margin:0 0 2px;font-weight:600">${esc(x.subj)}</div><div class="t">${esc(x.text)}</div>${tg(x.date,[x.time,x.due].filter(Boolean).join(' · '))}${(adm()||x.by===uid)?`<div><button class="lnk" style="color:var(--mute)" data-a="del" data-c="homework" data-id="${x.id}">Удалить</button></div>`:''}</div></div>`}
 function home(){
   const open=tasks.filter(t=>!t.done).length,hwo=hw.filter(x=>!(x.doneBy||[]).includes(U.fam)).length,dn=debts(U.fam);
   let h=banner()+`<p class="lead">${open+hwo+dn?`Дел: ${open}, домашек: ${hwo}, сборов к оплате: ${dn}`:'Пока всё спокойно'}</p><div class="sub" role="tablist"><button role="tab" data-a="sub" data-v="t" aria-selected="${S.sub==='t'}">Дела</button><button role="tab" data-a="sub" data-v="h" aria-selected="${S.sub==='h'}">Домашка</button></div>`;
@@ -228,7 +241,7 @@ function money(){
   const fams=[...new Set(mem.map(m=>m.fam))];
   funds.slice().sort((x,y)=>y.t-x.t).forEach(f=>{
     const paid=f.paid||{},n=fams.filter(x=>paid[x]).length,pct=fams.length?Math.round(n/fams.length*100):0,mine=!!paid[U.fam];
-    h+=`<div class="box"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="t">${esc(f.title)}</div><div class="s">${esc(f.date?'до '+fmtD(f.date).toLowerCase():(f.deadline||''))}</div></div><div class="am">${rub(f.amount)}</div></div><div class="bar"><i style="width:${pct}%"></i></div><div class="s">Сдали ${n} из ${fams.length} семей</div>`;
+    h+=`<div class="box"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="t">${esc(f.title)}</div><div class="s">${esc(f.date?'до '+fmtD(f.date).toLowerCase()+(f.time?' · '+f.time:''):(f.deadline||''))}</div></div><div class="am">${rub(f.amount)}</div></div><div class="bar"><i style="width:${pct}%"></i></div><div class="s">Сдали ${n} из ${fams.length} семей</div>`;
     if(a){fams.filter(x=>!paid[x]).forEach(x=>{const m=famMem(x);h+=`<div class="dr"><span class="av">${esc((m[0]?.name||'?')[0])}</span><span>${esc(m.map(y=>y.name).join(', '))}<span class="s" style="display:block;margin:0">${esc([...new Set(m.map(y=>y.kid))].join(', '))}</span></span><span class="sp"><button class="btn sm" data-a="pay" data-id="${f.id}" data-fam="${x}">Сдал(а)</button></span></div>`});
       h+=`<div class="btns"><button class="btn o sm" data-a="del" data-c="funds" data-id="${f.id}">Удалить сбор</button></div>`}
     else h+=mine?`<span class="tag ok">Вы сдали</span> <button class="lnk" data-a="unpay" data-id="${f.id}" data-fam="${U.fam}" style="color:var(--mute)">Отменить</button>`:`<div class="btns"><button class="btn" data-a="pay" data-id="${f.id}" data-fam="${U.fam}">Мы сдали</button></div>`;
@@ -254,9 +267,9 @@ function more(){
   <div class="s" style="margin-top:8px">До 3 учётных записей одной семьи. Все видят одни и те же дела и сборы.</div>
   ${fm.length<3?`<div class="s" style="margin-top:12px">Код семьи</div><div class="code">${esc(U.famCode)}</div><button class="btn o" data-a="shareFam">Позвать в семью</button>`:'<span class="tag ok">Семья заполнена: 3 из 3</span>'}</div>
   <h2>Уже есть код семьи?</h2><input class="f" id="fc" placeholder="Код семьи" maxlength="8" autocapitalize="characters"><div class="btns"><button class="btn o" data-a="joinFam">Присоединиться к семье</button></div>
-   <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">${isAndroidApk()?'На Android ежедневно напоминаем в 07:30 и 18:00, даже при закрытом приложении. Для мгновенных событий в фоне потребуется отдельная Push-доставка.':'В браузере доступны уведомления при открытом сайте; фоновый Web Push требует серверной настройки.'}</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div></div>
+   <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">${isAndroidApk()?'Уведомления на дату и время каждого невыполненного дела, домашнего задания и неоплаченного сбора. Если время не задано — 09:00. Для мгновенных событий при закрытом приложении нужна отдельная серверная Push-доставка.':'Уведомления браузера для открытого сайта.'}</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div></div>
   <h2>Аккаунт</h2><div class="box"><div class="t">${esc(U.name)}</div><div class="s">${esc(U.profile?.school||'')} · ${esc(U.profile?.city||'')}</div><div class="s">Синхронизация по email и паролю</div><button class="lnk" data-a="logout">Выйти</button></div>
-  <h2>Обновления Android</h2>${isAndroidApk()?`<div class="box"><div class="t">Обновления через GitHub Releases</div><div class="s" id="apk-update-status">${esc(updateState)}</div><div class="btns"><button class="btn o" data-a="apkCheck" ${updateBusy?'disabled':''}>Проверить обновления</button>${apkUpdate?.updateAvailable?`<button class="btn" data-a="apkInstall" ${updateBusy?'disabled':''}>Скачать и установить ${esc(apkUpdate.latest)}</button>`:''}</div></div>`:'<div class="s">Обновления APK доступны только в Android-сборке.</div>'}
+  <h2>Обновления Android</h2>${isAndroidApk()?`<div class="box"><div class="t">Обновления через GitHub Releases</div><div class="s">${esc(apkDiagnostics())}</div><div class="s" id="apk-update-status">${esc(updateState)}</div><div class="btns"><button class="btn o" data-a="apkCheck" ${updateBusy?'disabled':''}>Проверить обновления</button>${apkUpdate?.updateAvailable?`<button class="btn" data-a="apkInstall" ${updateBusy?'disabled':''}>Скачать и установить ${esc(apkUpdate.latest)}</button>`:''}</div></div>`:'<div class="s">Обновления APK доступны только в Android-сборке.</div>'}
   <h2>Приложение</h2>${installEv?'<button class="btn" data-a="install">Установить на телефон</button>':'<div class="s">В меню браузера выберите «Установить приложение» или «Добавить на главный экран».</div>'}
   <div class="btns"><button class="btn o sm" data-a="tour">Показать подсказки снова</button></div>
   <h2>Данные</h2><a class="lnk" href="privacy.html" target="_blank">Политика конфиденциальности</a><div class="btns"><button class="btn o sm" data-a="delAcc">Покинуть класс</button></div>`;
@@ -276,9 +289,9 @@ function sheet(k){
   let h='<div class="grab"></div>';
   if(k==='menu')h+=`<h3>Добавить</h3><button class="mn" data-a="sheet" data-k="chat"><span>Из чата<small>Вставьте сообщение родителей</small></span></button><button class="mn" data-a="sheet" data-k="task"><span>Дело<small>Что принести, сделать, куда прийти</small></span></button><button class="mn" data-a="sheet" data-k="hw"><span>Домашнее задание<small>Предмет, задание, срок</small></span></button>${adm()?'<button class="mn" data-a="sheet" data-k="fund"><span>Сбор денег<small>Сумма с семьи и срок</small></span></button>':''}`;
   if(k==='chat')h+=`<h3>Из чата</h3><div class="s">Вставьте текст сообщения из WhatsApp или Telegram.</div><textarea id="ct" aria-label="Текст"></textarea><div class="btns"><button class="btn wide" data-a="parse">Разобрать</button></div>`;
-  if(k==='task')h+=`<h3>Новое дело</h3><input class="f" id="a1" placeholder="Что нужно сделать"><div class="s" style="margin-top:12px">Дата (по ней придёт напоминание)</div><input class="f" id="a2" type="date" style="margin-top:4px"><input class="f" id="a4" placeholder="Время или уточнение, например 18:30"><div class="btns"><button class="btn wide" data-a="addTask">Добавить</button></div>`;
-  if(k==='hw')h+=`<h3>Домашнее задание</h3><input class="f" id="a1" list="sb" placeholder="Предмет"><datalist id="sb">${SUBJ.map(s=>`<option>${s}</option>`).join('')}</datalist><input class="f" id="a2" placeholder="Что задали"><div class="s" style="margin-top:12px">Сдать к (по этой дате придёт напоминание)</div><input class="f" id="a3" type="date" style="margin-top:4px"><div class="btns"><button class="btn wide" data-a="addHw">Добавить</button></div>`;
-  if(k==='fund')h+=`<h3>Новый сбор</h3><input class="f" id="a1" placeholder="На что собираем"><input class="f" id="a2" type="number" inputmode="numeric" placeholder="Сумма с семьи, ₸"><div class="s" style="margin-top:12px">Сдать до (по этой дате придёт напоминание)</div><input class="f" id="a3" type="date" style="margin-top:4px"><div class="btns"><button class="btn wide" data-a="addFund">Создать</button></div>`;
+  if(k==='task')h+=`<h3>Новое дело</h3><input class="f" id="a1" placeholder="Что нужно сделать"><div class="s" style="margin-top:12px">Дата напоминания</div><input class="f" id="a2" type="date" style="margin-top:4px"><label class="fieldlabel">Время напоминания (по умолчанию 09:00)</label><input class="f" id="a5" type="time" value="09:00"><input class="f" id="a4" placeholder="Уточнение, например что принести"><div class="btns"><button class="btn wide" data-a="addTask">Добавить</button></div>`;
+  if(k==='hw')h+=`<h3>Домашнее задание</h3><input class="f" id="a1" list="sb" placeholder="Предмет"><datalist id="sb">${SUBJ.map(s=>`<option>${s}</option>`).join('')}</datalist><input class="f" id="a2" placeholder="Что задали"><div class="s" style="margin-top:12px">Сдать к (дата уведомления)</div><input class="f" id="a3" type="date" style="margin-top:4px"><label class="fieldlabel">Время напоминания</label><input class="f" id="a5" type="time" value="09:00"><div class="btns"><button class="btn wide" data-a="addHw">Добавить</button></div>`;
+  if(k==='fund')h+=`<h3>Новый сбор</h3><input class="f" id="a1" placeholder="На что собираем"><input class="f" id="a2" type="number" inputmode="numeric" placeholder="Сумма с семьи, ₸"><div class="s" style="margin-top:12px">Сдать до (дата уведомления)</div><input class="f" id="a3" type="date" style="margin-top:4px"><label class="fieldlabel">Время напоминания</label><input class="f" id="a5" type="time" value="09:00"><div class="btns"><button class="btn wide" data-a="addFund">Создать</button></div>`;
   $('#sheet').innerHTML=h;$('#bg').classList.add('on');
 }
 const close=()=>$('#bg').classList.remove('on');
@@ -321,13 +334,13 @@ const A={
  setPassword:()=>lock(async()=>{const pwd=v('newpassword');if(pwd.length<8||pwd!==v('newpassword2'))throw Error('Пароль от 8 символов, оба поля должны совпадать');check(await sb.auth.updateUser({password:pwd}));S.mode='login';toast('Пароль изменён');await initSession()}),
  login:()=>lock(async()=>{const email=v('email'),password=v('password');if(!email||!password)throw Error('Введите email и пароль');check(await sb.auth.signInWithPassword({email,password}));await initSession()}),
  forgot:()=>lock(async()=>{const email=v('email');if(!email)throw Error('Укажите email в поле выше');check(await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}));toast('Если адрес зарегистрирован, на него отправлено письмо для восстановления')}),
- logout:()=>lock(async()=>{check(await sb.auth.signOut());uid=null;U=null;S.mode='login';draw()}),
+ logout:()=>lock(async()=>{if(isAndroidApk())await clearDeadlineReminders();check(await sb.auth.signOut());uid=null;U=null;S.mode='login';draw()}),
  tab:d=>{S.tab=d.v;draw()},sub:d=>{S.sub=d.v;draw()},flt:d=>{S.f=d.v;draw()},sheet:d=>sheet(d.k),
  makeClass:()=>lock(async()=>{const code=await rpc('create_class',{p_grade:U.kidClass});toast('Класс создан: '+code);await initSession()}),
  joinClass:()=>lock(async()=>{const code=v('cd').toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code))throw Error('Код класса — шесть символов');await rpc('join_class',{p_code:code});await initSession()}),
- addTask:()=>lock(async()=>{const title=v('a1');if(!title)throw Error('Напишите, что нужно сделать');await saveItem('tasks',{title,when:v('a4'),date:v('a2'),byName:U.name,done:false});close();S.tab='home';S.sub='t';draw()}),
- addHw:()=>lock(async()=>{const text=v('a2');if(!text)throw Error('Напишите домашнее задание');await saveItem('homework',{subj:v('a1')||'Задание',text,date:v('a3'),doneBy:[]});close();S.tab='home';S.sub='h';draw()}),
- addFund:()=>lock(async()=>{const title=v('a1'),amount=parseInt(v('a2'),10);if(!title||!Number.isInteger(amount)||amount<=0)throw Error('Введите назначение и сумму');await saveItem('funds',{title,amount,date:v('a3'),paid:{}});close();S.tab='money';draw()}),
+ addTask:()=>lock(async()=>{const title=v('a1');if(!title)throw Error('Напишите, что нужно сделать');await saveItem('tasks',{title,when:v('a4'),date:v('a2'),time:v('a5')||'09:00',byName:U.name,done:false});close();S.tab='home';S.sub='t';draw()}),
+ addHw:()=>lock(async()=>{const text=v('a2');if(!text)throw Error('Напишите домашнее задание');await saveItem('homework',{subj:v('a1')||'Задание',text,date:v('a3'),time:v('a5')||'09:00',doneBy:[]});close();S.tab='home';S.sub='h';draw()}),
+ addFund:()=>lock(async()=>{const title=v('a1'),amount=parseInt(v('a2'),10);if(!title||!Number.isInteger(amount)||amount<=0)throw Error('Введите назначение и сумму');await saveItem('funds',{title,amount,date:v('a3'),time:v('a5')||'09:00',paid:{}});close();S.tab='money';draw()}),
  tdone:d=>lock(()=>changeItem(d.id,'toggle_task')),
  take:d=>lock(()=>changeItem(d.id,'take',U.name)),
  hdone:d=>lock(()=>changeItem(d.id,'toggle_homework')),
@@ -344,23 +357,20 @@ const A={
  apkCheck:()=>checkForApkUpdate(false),apkInstall:()=>startApkUpdate(),
  install:async()=>{if(installEv){await installEv.prompt();installEv=null;draw()}},tour:()=>tour(true),
  pushEnable:()=>lock(pushEnable),pushDisable:()=>lock(pushDisable),pushHide:()=>{localStorage.pushHide='1';draw()},
- delAcc:()=>{if(!confirm('Покинуть класс и удалить профиль приложения? Данные входа Supabase Auth останутся, пока администратор не удалит аккаунт на сервере.'))return;lock(async()=>{await rpc('leave_class');await initSession();toast('Вы покинули класс. Для полного удаления учётной записи обратитесь к администратору.')})}
+ delAcc:()=>{if(!confirm('Покинуть класс и удалить профиль приложения? Данные входа Supabase Auth останутся, пока администратор не удалит аккаунт на сервере.'))return;lock(async()=>{if(isAndroidApk())await clearDeadlineReminders();await rpc('leave_class');await initSession();toast('Вы покинули класс. Для полного удаления учётной записи обратитесь к администратору.')})}
 };
 const localAndroid=()=>isAndroidApk()?window.Capacitor?.Plugins?.LocalNotifications:null;
 const pushIs=()=>isAndroidApk()?!!localStorage.yasnoNativeReminders:('Notification' in window&&Notification.permission==='granted'&&!!localStorage.yasnoPush);
-const banner=()=>((!isAndroidApk()&&(!('Notification' in window)||Notification.permission==='denied'))||pushIs()||localStorage.pushHide)?'':'<div class="box"><div class="t">Разрешите уведомления</div><div class="s">'+(isAndroidApk()?'Ежедневные локальные напоминания в 07:30 и 18:00, в том числе при закрытом приложении.':'Уведомления браузера при открытом сайте.')+'</div><div class="btns"><button class="btn sm" data-a="pushEnable">Включить</button><button class="btn o sm" data-a="pushHide">Не сейчас</button></div></div>';
+const banner=()=>((!isAndroidApk()&&(!('Notification' in window)||Notification.permission==='denied'))||pushIs()||localStorage.pushHide)?'':'<div class="box"><div class="t">Разрешите уведомления</div><div class="s">'+(isAndroidApk()?'Напоминания к срокам дел, домашних заданий и сборов на этом телефоне.':'Уведомления браузера при открытом сайте.')+'</div><div class="btns"><button class="btn sm" data-a="pushEnable">Включить</button><button class="btn o sm" data-a="pushHide">Не сейчас</button></div></div>';
 async function pushEnable(){
   if(isAndroidApk()){
     const plugin=localAndroid();
     if(!plugin)throw Error('Нативный плагин уведомлений не найден. Пересоберите APK с @capacitor/local-notifications.');
     const permission=await plugin.requestPermissions();
     if(permission.display!=='granted')throw Error('Разрешите уведомления для «Ясно» в настройках Android');
-    await plugin.cancel({notifications:[{id:730},{id:1800}]});
-    await plugin.schedule({notifications:[
-      {id:730,title:'Ясно · Доброе утро',body:'Проверьте задания и дела на сегодня',schedule:{on:{hour:7,minute:30},repeats:true}},
-      {id:1800,title:'Ясно · Вечернее напоминание',body:'Проверьте задания и сборы на завтра',schedule:{on:{hour:18,minute:0},repeats:true}}
-    ]});
-    localStorage.yasnoNativeReminders='1';toast('Ежедневные напоминания включены');draw();return;
+    localStorage.yasnoNativeReminders='1';
+    const result=await syncDeadlineReminders({userId:uid,classCode:U?.cls,familyId:U?.fam,tasks,homework:hw,funds});
+    toast('Напоминания по срокам включены: '+result.scheduled);draw();return;
   }
  if(!('Notification' in window)||!('serviceWorker' in navigator))throw Error('Этот браузер не поддерживает уведомления');
  const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Разрешите уведомления в настройках браузера');
@@ -377,7 +387,7 @@ async function pushEnable(){
 }
 async function pushDisable(){
   if(isAndroidApk()){
-    const plugin=localAndroid();if(plugin)await plugin.cancel({notifications:[{id:730},{id:1800}]});
+    await clearDeadlineReminders();
     delete localStorage.yasnoNativeReminders;toast('Напоминания выключены');draw();return;
   }
  try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){check(await sb.from('push_subscriptions').delete().eq('user_id',uid).eq('endpoint',sub.endpoint));await sub.unsubscribe()}}catch(e){console.warn(e)}

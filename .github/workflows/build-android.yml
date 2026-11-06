@@ -60,6 +60,20 @@ jobs:
           s=s.replace("export const GITHUB_REPO = 'yasno-app'", "export const GITHUB_REPO = '"+os.environ['REPO_NAME']+"'")
           p.write_text(s)
           PYCODE
+      - name: Stamp build version into Android web assets
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          p=Path('capacitor/www/index.html')
+          s=p.read_text()
+          marker='<meta name="yasno-build" content="dev">'
+          if marker not in s: raise SystemExit('Build marker is missing in index.html')
+          p.write_text(s.replace(marker,'<meta name="yasno-build" content="'+os.environ['VERSION']+'">'))
+          PYCODE
       - name: Refresh bundled web files
         working-directory: capacitor
         run: npx cap sync android && node install-native-updater.mjs
@@ -92,6 +106,11 @@ jobs:
           test -f capacitor/android/app/src/main/java/kz/yasno/classroom/YasnoUpdaterPlugin.java
           test -f capacitor/android/app/src/main/assets/public/index.html
           grep -Fq "LocalNotifications" capacitor/android/app/src/main/assets/public/index.html
+          grep -Fq "deadline-reminders.js" capacitor/android/app/src/main/assets/public/index.html
+          test -f capacitor/android/app/src/main/assets/public/deadline-reminders.js
+          grep -Fq 'yasno-build" content="' capacitor/android/app/src/main/assets/public/index.html
+          grep -Fq "LOAD_NO_CACHE" capacitor/android/app/src/main/java/kz/yasno/classroom/MainActivity.java
+          grep -Fq "android.permission.SCHEDULE_EXACT_ALARM" capacitor/android/app/src/main/AndroidManifest.xml
           echo "SUCCESS: correct GitHub settings, native updater and Android notifications bundled"
 
       - name: Compile release APK
