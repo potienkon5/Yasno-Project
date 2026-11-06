@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f6ff">
+<meta name="description" content="Ясно — дела класса, домашние задания, сборы и семейные напоминания в одном удобном приложении. Скачать для Android или установить на iPhone через Safari.">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Ясно — школьные дела без хаоса в чатах">
+<meta property="og:description" content="Дела, домашка, сборы, семья и напоминания — в одном месте. Доступно на Android и iPhone.">
+<meta property="og:image" content="https://potienkon5.github.io/Yasno-Project/app/icon-512.png">
+<meta property="og:url" content="https://potienkon5.github.io/Yasno-Project/">
+<link rel="canonical" href="https://potienkon5.github.io/Yasno-Project/">
+<link rel="icon" type="image/png" href="./app/icon-192.png">
+<link rel="apple-touch-icon" href="./app/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=Literata:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Ясно — школьные дела без хаоса в чатах</title>
+<style>
+:root{--navy:#17244b;--navy2:#263969;--ink:#202746;--muted:#66728e;--cream:#faf9f5;--white:#fff;--lav:#edf0ff;--pink:#f7dfe7;--violet:#7875dd;--mint:#e2f4ec;--line:#e3e6f0}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:95px}
+body{margin:0;background:var(--cream);color:var(--ink);font:400 16px/1.6 'Golos Text',system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #867dec;outline-offset:4px}
+.wrap{width:min(1150px,calc(100% - 44px));margin:auto}
+.site-header{position:sticky;top:0;z-index:30;background:#faf9f5ed;backdrop-filter:blur(18px);border-bottom:1px solid #e7e6e8}
+.head{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:25px;letter-spacing:-.04em}
+.brand-icon{width:43px;height:43px;display:grid;place-items:center;background:linear-gradient(145deg,#817ef0,#3a4d9c);color:white;border-radius:14px;font:700 29px/1 'Literata',serif;box-shadow:0 7px 20px #5d64c433}
+nav{display:flex;align-items:center;gap:29px;font-size:14px;font-weight:600;color:#515c7d}
+nav a:hover{color:var(--violet)}
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:12px;min-height:52px;border-radius:15px;padding:13px 23px;border:1px solid transparent;cursor:pointer;font-weight:700;font-size:15px;transition:transform .2s,box-shadow .2s,background .2s;text-align:center}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:0 10px 26px #29396924}
+.btn-primary:hover{background:#263969;box-shadow:0 14px 32px #29396938}
+.btn-light{background:white;color:var(--navy);border-color:var(--line)}
+.btn-white{background:white;color:var(--navy)}
+.btn-sm{min-height:43px;padding:9px 19px;font-size:14px;border-radius:12px}
+.pill{display:inline-flex;align-items:center;gap:9px;padding:7px 13px;background:white;border:1px solid #e6e7f3;border-radius:100px;color:#4b5585;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.pill i{width:8px;height:8px;border-radius:50%;background:#8b7ee9}
+.hero{position:relative;overflow:hidden;background:radial-gradient(circle at 84% 40%,#e8e5ff 0,transparent 43%),radial-gradient(circle at 0% 100%,#fce7ea 0,transparent 40%),#faf9f5}
+.hero-grid{min-height:665px;display:grid;grid-template-columns:1.03fr .97fr;align-items:center;gap:55px;padding:80px 0 90px}
+h1,h2,h3,p{margin-top:0}
+h1,h2,.serif{font-family:'Literata',Georgia,serif}
+h1{font-size:clamp(41px,5.3vw,71px);line-height:1.12;letter-spacing:-.055em;margin:22px 0}
+h1 em{font-style:normal;color:#7372d9}
+.hero-lead{font-size:18px;color:var(--muted);max-width:510px;line-height:1.75;margin-bottom:29px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap}
+.hero-meta{margin-top:22px;display:flex;align-items:center;gap:11px;color:#7b849b;font-size:13px}
+.hero-meta .divider-dot{height:4px;width:4px;border-radius:50%;background:#a9aac0}
+.visual{position:relative;min-height:565px;display:grid;place-items:center}
+.shape{position:absolute;border-radius:40px;transform:rotate(-13deg);height:450px;width:390px;background:linear-gradient(140deg,#d5d9ff,#f5d8e5);right:3%;top:9%;box-shadow:24px 30px 55px #7577b61a}
+.phone{position:relative;width:min(335px,100%);background:#101831;padding:10px;border-radius:45px;box-shadow:0 32px 70px #303c793f,0 4px 14px #4d5a8c20;transform:rotate(5deg)}
+.phone-inner{min-height:495px;background:#fcfbff;border-radius:36px;overflow:hidden}
+.phone-top{background:#152149;color:white;padding:28px 22px 23px}
+.phone-top small{font-size:12px;color:#a3aed1}
+.phone-title{display:flex;align-items:center;justify-content:space-between;font:600 23px 'Literata',serif;margin-top:5px}
+.phone-tag{font:600 11px 'Golos Text',sans-serif;padding:7px 10px;background:#ffffff22;border-radius:8px}
+.phone-content{padding:18px}
+.today{font:600 21px 'Literata',serif;line-height:1.35;margin-bottom:15px}
+.demo-tabs{display:flex;gap:18px;border-bottom:1px solid #e4e7f3;padding-bottom:8px;font-size:12px;font-weight:700;color:#8b95ae}
+.demo-tabs span:first-child{color:#1e2c57;border-bottom:2px solid #de8fba;padding-bottom:6px;margin-bottom:-9px}
+.task{display:flex;gap:11px;align-items:flex-start;background:white;border:1px solid #e7e9f6;border-radius:13px;padding:13px 12px;margin:12px 0;box-shadow:0 3px 14px #505b8c0a}
+.check{flex:none;width:22px;height:22px;border:2px solid #b5bce0;border-radius:7px;display:grid;place-items:center;color:white;font-size:12px;margin-top:1px}
+.check.done{border-color:#78b8a0;background:#78b8a0}
+.task strong{display:block;font-size:12px;line-height:1.4;font-weight:700}
+.task span{display:block;color:#8791ad;font-size:11px;margin-top:4px}
+.mini-money{margin-top:16px;border-radius:13px;padding:14px;background:#eef1ff}
+.mini-money .line{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px}
+.mini-money .line strong{font-size:14px}
+.track{height:7px;border-radius:10px;background:#d4d9f7;overflow:hidden;margin:12px 0 4px}
+.track div{height:100%;width:65%;background:#777cdd}
+.mini-money small{color:#7b85aa;font-size:11px}
+.float-card{position:absolute;background:white;box-shadow:0 12px 35px #4a529e24;border:1px solid #e8e9f8;border-radius:15px;padding:13px 17px;display:flex;align-items:center;gap:11px;font-weight:700;font-size:12px;color:#303b68}
+.float-card span{display:grid;place-items:center;width:34px;height:34px;background:#e3f5ec;color:#40886a;border-radius:11px;font-weight:800}
+.fc-one{top:13%;left:-8%}.fc-two{bottom:15%;right:-7%}.fc-two span{background:#fbeaf0;color:#a5527a}
+section{padding:98px 0}
+.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.13em;color:#7770d6;margin-bottom:14px}
+.section-title{font-size:clamp(31px,4vw,49px);letter-spacing:-.045em;line-height:1.2;max-width:750px;margin-bottom:14px}
+.section-desc{color:#76819a;max-width:630px;font-size:17px;line-height:1.7;margin-bottom:40px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}
+.feature{background:white;border:1px solid #eaebf4;border-radius:24px;padding:28px;min-height:245px;box-shadow:0 8px 30px #5c659a0b}
+.feature:nth-child(2){background:#eeefff}
+.feature:nth-child(5){background:#fff0f3}
+.iconbox{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#e7e9ff;color:#6868c6;font-size:22px;font-weight:800;margin-bottom:25px}
+.feature:nth-child(2) .iconbox{background:white}
+.feature:nth-child(5) .iconbox{background:white;color:#b86991}
+.feature h3{font-size:18px;letter-spacing:-.02em;margin-bottom:10px}
+.feature p{font-size:14px;color:#71809b;margin-bottom:0;line-height:1.72}
+.how{background:#17244b;color:white;position:relative;overflow:hidden}
+.how:after{content:'';position:absolute;right:-140px;top:-120px;width:500px;height:500px;border:1px solid #ffffff1b;border-radius:50%;box-shadow:0 0 0 75px #ffffff09,0 0 0 150px #ffffff07;pointer-events:none}
+.how .eyebrow{color:#b9b5ff}
+.how .section-desc{color:#adb8d4}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;position:relative;z-index:1}
+.step{border:1px solid #ffffff2d;border-radius:20px;padding:27px;background:#ffffff0b}
+.num{font:600 48px 'Literata',serif;color:#d2d0ff;line-height:1.2}
+.step h3{margin:16px 0 10px;font-size:18px}
+.step p{font-size:14px;color:#b4c0df;line-height:1.75;margin:0}
+.for-whom{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.persona{border-radius:26px;background:#f0efff;padding:36px}
+.persona:last-child{background:#edf5f0}
+.persona h3{font:600 26px 'Literata',serif;margin-bottom:12px}
+.persona p{color:#6a7592;line-height:1.8;margin-bottom:0}
+.install{background:linear-gradient(180deg,#fbfaff,#fff)}
+.install-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.install-card{border:1px solid #e3e7f4;background:white;border-radius:28px;padding:34px;box-shadow:0 15px 35px #8186c012;display:flex;flex-direction:column;align-items:flex-start}
+.platform{display:flex;align-items:center;gap:11px;margin-bottom:22px;font-weight:800;font-size:14px}
+.platform-icon{width:47px;height:47px;border-radius:14px;display:grid;place-items:center;background:#f1f2fc;font-weight:800;font-size:26px}
+.install-card h3{font:600 28px 'Literata',serif;line-height:1.3;margin-bottom:11px}
+.install-card p{font-size:15px;color:#6c7891;line-height:1.75}
+.install-card .btn{margin-top:auto}
+.install-note{font-size:12px!important;margin:14px 0 0}
+.instruction{margin:6px 0 28px;padding:0;list-style:none;counter-reset:point}
+.instruction li{counter-increment:point;display:flex;gap:12px;margin-top:15px;align-items:flex-start;color:#5e6886;font-size:14px}
+.instruction li:before{content:counter(point);flex:none;width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:#e7e9ff;color:#575fbd;font-size:12px;font-weight:800}
+.platform-note{display:flex;align-items:center;gap:13px;background:#eff0fc;border:1px solid #e4e4f4;border-radius:16px;padding:15px 18px;margin-top:25px;font-size:14px;color:#556080}
+.platform-note b{color:#34436c}
+.faq{max-width:790px;margin:auto}
+.faq .section-title{text-align:center;margin-left:auto;margin-right:auto}
+.faq .eyebrow{text-align:center}
+details{border-bottom:1px solid #e0e4ef;padding:18px 2px}
+summary{cursor:pointer;font-weight:700;font-size:16px;list-style:none;display:flex;justify-content:space-between;gap:15px;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary:after{content:'+';font-size:24px;color:#7d7bd3}
+details[open] summary:after{content:'−'}
+details p{color:#6b7690;font-size:14px;line-height:1.8;margin:12px 40px 4px 0}
+.final{padding:0 0 90px}
+.final-box{background:linear-gradient(135deg,#5f6dbd,#313f7c);border-radius:34px;color:white;text-align:center;padding:72px 35px;position:relative;overflow:hidden}
+.final-box:after{content:'';width:340px;height:340px;border:1px solid #ffffff20;border-radius:50%;position:absolute;right:-100px;bottom:-240px;pointer-events:none}
+.final-box h2{font-size:clamp(32px,4.5vw,52px);line-height:1.25;letter-spacing:-.045em;margin-bottom:14px}
+.final-box p{color:#e4e8ff;font-size:17px;margin-bottom:25px}
+.footer{background:#111b39;color:#bac3dc;padding:44px 0}
+.footer-grid{display:flex;justify-content:space-between;align-items:flex-start;gap:30px;flex-wrap:wrap}
+.footer .brand{color:white}
+.footer .brand-icon{width:34px;height:34px;font-size:22px;border-radius:10px}
+.footer p{font-size:13px;line-height:1.75;max-width:420px;margin-top:14px}
+.footer-links{display:flex;gap:22px;flex-wrap:wrap;font-size:13px}
+.footer-links a:hover{color:white}
+.copyright{border-top:1px solid #ffffff24;margin-top:24px;padding-top:19px;font-size:12px;color:#939fbd}
+.mobile-sticky{display:none}
+@media(max-width:980px){nav{display:none}.hero-grid{grid-template-columns:1fr 1fr;gap:20px}.visual{min-height:530px}.phone{transform:rotate(3deg) scale(.91)}.fc-one{left:-3%}.fc-two{right:-2%}}
+@media(max-width:720px){
+.wrap{width:min(100% - 36px,520px)}.head{min-height:68px}.head>.btn{min-height:40px;padding:9px 14px;font-size:12px}
+.hero-grid{grid-template-columns:1fr;padding:64px 0 35px;gap:0}.hero h1{font-size:clamp(40px,10vw,55px)}.hero-lead{font-size:16px}.hero-meta{font-size:11px}.visual{min-height:500px}.phone{transform:rotate(3deg) scale(.87)}.shape{left:50%;right:auto;transform:translateX(-50%) rotate(-13deg);width:320px;height:370px}.fc-one{left:-2%;top:9%}.fc-two{right:-2%;bottom:7%}
+section{padding:70px 0}.cards,.steps,.install-grid,.for-whom{grid-template-columns:1fr}.feature{min-height:0;padding:25px}.feature .iconbox{margin-bottom:16px}.install-card{padding:27px}.persona{padding:27px}.final{padding:0 0 80px}.final-box{border-radius:24px;padding:50px 23px}
+.mobile-sticky{display:flex;position:fixed;bottom:12px;left:12px;right:12px;z-index:25;box-shadow:0 15px 30px #14244b40;padding:8px;background:#ffffffeb;backdrop-filter:blur(12px);border-radius:17px;border:1px solid #e4e5f5}
+.mobile-sticky .btn{width:100%;min-height:47px}.footer{padding-bottom:100px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn{transition:none}}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap head">
+<a class="brand" href="#top" aria-label="Ясно — на главную"><span class="brand-icon">Я</span>Ясно</a>
+<nav aria-label="Разделы сайта"><a href="#features">Возможности</a><a href="#how">Как работает</a><a href="#install">Установка</a><a href="#faq">Вопросы</a></nav>
+<a class="btn btn-primary btn-sm" href="#install">Получить приложение <span aria-hidden="true">↗</span></a>
+</div></header>
+<main id="top">
+<section class="hero"><div class="wrap hero-grid">
+<div>
+<div class="pill"><i></i> Приложение для школьного класса</div>
+<h1>Меньше хаоса в чатах.<br><em>Больше ясности.</em></h1>
+<p class="hero-lead">Домашка, дела, сборы и важные сроки класса — в одном понятном месте. Больше не нужно искать сообщения среди сотен переписок.</p>
+<div class="ctas">
+<a class="btn btn-primary" id="hero-primary" href="#install">Установить Ясно <span aria-hidden="true">↗</span></a>
+<a class="btn btn-light" href="#features">Посмотреть возможности <span aria-hidden="true">↓</span></a>
+</div>
+<div class="hero-meta"><span>Для родителей и старост</span><span class="divider-dot"></span><span>Android и iPhone</span></div>
+</div>
+<div class="visual" aria-label="Пример интерфейса приложения Ясно">
+<div class="shape" aria-hidden="true"></div>
+<div class="float-card fc-one"><span>✓</span><div>Всё важное<br>под рукой</div></div>
+<div class="phone">
+<div class="phone-inner">
+<div class="phone-top"><small>Школа · общий класс</small><div class="phone-title">1А класс <span class="phone-tag">староста</span></div></div>
+<div class="phone-content">
+<div class="today">Сегодня всё<br>под контролем</div>
+<div class="demo-tabs"><span>Дела</span><span>Домашка</span><span>Сборы</span></div>
+<div class="task"><div class="check done">✓</div><div><strong>Принести материалы на ИЗО</strong><span>Готово · Сегодня</span></div></div>
+<div class="task"><div class="check"></div><div><strong>Подготовить форму для физкультуры</strong><span>Завтра · 08:00</span></div></div>
+<div class="mini-money"><div class="line"><span>Сбор на экскурсию</span><strong>2 000 ₸</strong></div><div class="track"><div></div></div><small>Отметки по семьям — в одном месте</small></div>
+</div></div></div>
+<div class="float-card fc-two"><span>3</span><div>Дела и сборы<br>для всей семьи</div></div>
+</div></div></section>
+<section id="features"><div class="wrap">
+<div class="eyebrow">Возможности</div><h2 class="section-title">Всё, что нужно классу.<br>Ничего лишнего.</h2>
+<p class="section-desc">Один понятный порядок вместо бесконечных сообщений и напоминаний в разных чатах.</p>
+<div class="cards">
+<article class="feature"><div class="iconbox">✓</div><h3>Дела класса</h3><p>Что принести, кому помочь, что подготовить — список со сроками и отметками о выполнении.</p></article>
+<article class="feature"><div class="iconbox">А</div><h3>Домашние задания</h3><p>Задания по предметам в одном дневнике. Родители отмечают выполнение для своей семьи.</p></article>
+<article class="feature"><div class="iconbox">₸</div><h3>Денежные сборы</h3><p>Назначение, сумма с семьи, срок и отметки «сдали». Староста видит общий прогресс.</p></article>
+<article class="feature"><div class="iconbox">⌂</div><h3>Одна семья — один порядок</h3><p>До трёх учётных записей в одной семье: общий статус дел и сборов.</p></article>
+<article class="feature"><div class="iconbox">✦</div><h3>Разбор сообщений</h3><p>Вставьте текст из родительского чата: приложение помогает выделить задания и важные дела.</p></article>
+<article class="feature"><div class="iconbox">◷</div><h3>Напоминания</h3><p>На Android можно включить локальные уведомления к срокам заданий и сборов. Возможности iPhone отличаются.</p></article>
+</div></div></section>
+<section id="how" class="how"><div class="wrap">
+<div class="eyebrow">Три шага</div><h2 class="section-title">Класс подключается<br>за несколько минут</h2>
+<p class="section-desc">Никаких сложных таблиц: создайте класс и пригласите родителей по коду.</p>
+<div class="steps">
+<div class="step"><div class="num">01</div><h3>Создайте аккаунт</h3><p>Зарегистрируйтесь по электронной почте и заполните сведения о ребёнке и классе.</p></div>
+<div class="step"><div class="num">02</div><h3>Создайте класс или войдите</h3><p>Староста создаёт класс, остальные родители вводят шестизначный код приглашения.</p></div>
+<div class="step"><div class="num">03</div><h3>Пользуйтесь вместе</h3><p>Добавляйте дела, домашку и сборы. Данные синхронизируются между участниками класса.</p></div>
+</div></div></section>
+<section id="people"><div class="wrap"><div class="eyebrow">Кому пригодится</div><h2 class="section-title">Спокойнее всем, кто рядом со школой</h2>
+<div class="for-whom">
+<div class="persona"><h3>Родителям</h3><p>Открыл приложение — и сразу видно, что задали, что нужно принести и какие сборы ещё ждут оплаты. Меньше вопросов в общем чате.</p></div>
+<div class="persona"><h3>Старосте класса</h3><p>Списки дел, домашние задания и учёт сборов в одном месте. Можно отмечать оплату семей и передавать роль другому родителю.</p></div>
+</div></div></section>
+<section id="install" class="install"><div class="wrap">
+<div class="eyebrow">Установка</div><h2 class="section-title">«Ясно» всегда под рукой</h2>
+<p class="section-desc">Для Android — готовый APK. Для iPhone — веб-приложение, которое добавляется на экран «Домой» через Safari.</p>
+<div class="install-grid">
+<article class="install-card" id="android"><div class="platform"><span class="platform-icon" aria-hidden="true">A</span> Android</div><h3>Скачать и установить</h3><p>Откройте ссылку с телефона, скачайте APK и установите приложение. Если Android запросит разрешение на установку из браузера, подтвердите его в настройках устройства.</p><a class="btn btn-primary" href="https://github.com/potienkon5/Yasno-Project/releases/latest/download/yasno-release.apk" rel="noopener" id="android-download">Скачать APK для Android <span aria-hidden="true">↓</span></a><p class="install-note">Файл загружается из публичного GitHub Releases. Аккаунт GitHub не требуется. Если открылось приложение GitHub — выберите открытие ссылки в браузере.</p></article>
+<article class="install-card" id="ios"><div class="platform"><span class="platform-icon" aria-hidden="true">i</span> iPhone / iPad</div><h3>Добавить на экран «Домой»</h3><p>Версия для iPhone работает как веб-приложение (PWA) — без App Store и установки APK.</p>
+<ol class="instruction">
+<li>Откройте кнопку ниже в <b>Safari</b> на iPhone.</li>
+<li>Нажмите «Поделиться» (значок квадрата со стрелкой).</li>
+<li>Выберите «На экран „Домой“» / «Add to Home Screen».</li>
+<li>Нажмите «Добавить» и запускайте «Ясно» с домашнего экрана.</li>
+</ol>
+<a class="btn btn-primary" href="./app/" id="ios-open">Открыть «Ясно» для iPhone <span aria-hidden="true">↗</span></a><p class="install-note">Уведомления и работа в фоне на iOS зависят от версии системы, разрешений и настроек веб-приложения. Некоторые нативные Android-функции недоступны.</p>
+</article>
+</div>
+<div class="platform-note"><strong aria-hidden="true">i</strong><span><b>Уже есть код класса?</b> После установки создайте аккаунт или войдите и введите код приглашения от старосты.</span></div>
+</div></section>
+<section id="faq"><div class="wrap faq">
+<div class="eyebrow">Частые вопросы</div><h2 class="section-title">Отвечаем на важное</h2>
+<details><summary>Нужно ли всем родителям скачивать приложение?</summary><p>Для совместной работы участникам нужен доступ к «Ясно». На Android можно установить APK, на iPhone — добавить веб-версию на главный экран. Каждый взрослый входит под своей учётной записью.</p></details>
+<details><summary>Как присоединиться к существующему классу?</summary><p>Попросите у старосты шестизначный код класса. После регистрации выберите присоединение к классу и введите этот код.</p></details>
+<details><summary>Видят ли родители мои отметки о сборах?</summary><p>Участники класса могут видеть сведения о сборах и статусах оплаты в интерфейсе. Не используйте приложение для хранения банковских карт или платёжных реквизитов.</p></details>
+<details><summary>Можно ли подключить маму и папу к одной семье?</summary><p>Да. В одной семье поддерживается до трёх учётных записей. Приглашение происходит по отдельному коду семьи.</p></details>
+<details><summary>Приходят ли уведомления на iPhone?</summary><p>На iPhone веб-версия работает иначе, чем Android APK. Фоновые уведомления требуют отдельной серверной настройки Web Push и не гарантируются текущей версией. Основные дела и задания доступны при открытии приложения.</p></details>
+<details><summary>Это интернет-магазин или сервис оплаты сборов?</summary><p>Нет. «Ясно» помогает вести учёт денежных сборов и отмечать оплату. Само приложение не принимает банковские платежи на этой странице.</p></details>
+</div></section>
+<section class="final"><div class="wrap"><div class="final-box"><h2>Пусть школьные дела<br>станут яснее.</h2><p>Один класс, одно место для важных вещей.</p><a href="#install" class="btn btn-white">Выбрать способ установки <span aria-hidden="true">↗</span></a></div></div></section>
+</main>
+<footer class="footer"><div class="wrap">
+<div class="footer-grid"><div><div class="brand"><span class="brand-icon">Я</span>Ясно</div><p>Приложение для организации дел школьного класса. Данные аккаунтов и класса обрабатываются с помощью Supabase.</p></div><div class="footer-links"><a href="#features">Возможности</a><a href="#install">Установка</a><a href="#faq">Вопросы</a><a href="./app/privacy.html">Конфиденциальность</a></div></div>
+<div class="copyright">© 2026 «Ясно». Android APK распространяется вне Google Play. Версия для iPhone устанавливается как веб-приложение через Safari.</div>
+</div></footer>
+<div class="mobile-sticky" aria-label="Быстрая установка"><a class="btn btn-primary" id="mobile-cta" href="#install">Установить «Ясно»</a></div>
+<script>
+(function(){
+  var agent=navigator.userAgent||'';
+  var ios=/iPad|iPhone|iPod/.test(agent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  var android=/Android/i.test(agent);
+  var hero=document.getElementById('hero-primary');
+  var mobile=document.getElementById('mobile-cta');
+  var apk=document.getElementById('android-download').href;
+  var pwa=document.getElementById('ios-open').href;
+  if(ios){hero.href=pwa;hero.textContent='Открыть на iPhone';mobile.href=pwa;mobile.textContent='Открыть для iPhone';}
+  else if(android){hero.href=apk;hero.textContent='Скачать APK для Android';mobile.href=apk;mobile.textContent='Скачать для Android';}
+})();
+</script>
+</body>
+</html>

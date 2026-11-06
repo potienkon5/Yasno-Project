@@ -1,4 +1,4 @@
-name: 3 - Publish Yasno email confirmation page
+name: 3 - Publish Yasno site, iOS PWA and email confirmations
 
 on:
   workflow_dispatch:
@@ -6,6 +6,9 @@ on:
     branches: [main]
     paths:
       - 'auth-page/**'
+      - 'landing/**'
+      - 'capacitor/www/**'
+      - 'tests/site-pages.test.mjs'
       - 'capacitor/www/supabase-config.js'
       - '.github/workflows/publish-auth-page.yml'
 
@@ -26,16 +29,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare the public confirmation page
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test public website and iOS PWA paths
+        run: node --test tests/site-pages.test.mjs
+      - name: Prepare Yasno landing, iOS PWA and email confirmation page
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p _site/auth
+          mkdir -p _site/auth _site/app
+          # Main website is published at /Yasno-Project/.
+          cp landing/index.html _site/index.html
+          # Keep the existing confirmation/reset callback working unchanged at /auth/.
           cp auth-page/index.html _site/auth/index.html
           cp capacitor/www/supabase-config.js _site/auth/supabase-config.js
+          # The same Supabase-powered application is hosted as an iOS-installable PWA.
+          cp -R capacitor/www/. _site/app/
           touch _site/.nojekyll
-          # Never copy server-side keys or project credentials: only the existing
-          # public Supabase anon/publishable key used by the frontend.
+          # The Supabase publishable/anon key is already used in the public frontend;
+          # never publish service_role keys, workflow secrets or signing credentials.
+          test -s _site/index.html
+          test -s _site/app/index.html
+          test -s _site/app/manifest.webmanifest
+          test -s _site/app/sw.js
           test -s _site/auth/index.html
           test -s _site/auth/supabase-config.js
       - uses: actions/configure-pages@v5
