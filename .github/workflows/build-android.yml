@@ -39,6 +39,8 @@ jobs:
          packages: 'platform-tools'
       - name: Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+      - name: Test deadline notifications logic
+        run: node --test tests/deadline-reminders.test.mjs
       - name: Prepare Capacitor project and native updater
         working-directory: capacitor
         shell: bash
@@ -60,13 +62,67 @@ jobs:
           s=s.replace("export const GITHUB_REPO = 'yasno-app'", "export const GITHUB_REPO = '"+os.environ['REPO_NAME']+"'")
           p.write_text(s)
           PYCODE
+      - name: Stamp build version into Android web assets
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          p=Path('capacitor/www/index.html')
+          s=p.read_text()
+          marker='<meta name="yasno-build" content="dev">'
+          if marker not in s: raise SystemExit('Build marker is missing in index.html')
+          p.write_text(s.replace(marker,'<meta name="yasno-build" content="'+os.environ['VERSION']+'">'))
+          PYCODE
       - name: Refresh bundled web files
         working-directory: capacitor
         run: npx cap sync android && node install-native-updater.mjs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Remove black padding from launcher icon
+        working-directory: capacitor
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          python fix-icon-background.py
+      - name: Generate Android launcher icon
+        working-directory: capacitor
+        run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#283771' --iconBackgroundColorDark '#283771'
       - name: Apply Android version for install-over-existing
         env:
           VERSION: ${{ inputs.version }}
         run: python3 .github/scripts/set_android_version.py "${VERSION}"
+        
+      - name: Verify updater bundled into Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE="capacitor/android/app/src/main/assets/public/apk-updater.js"
+
+          test -f "$FILE" || {
+            echo "ERROR: apk-updater.js missing in APK assets"
+            exit 1
+          }
+
+          grep -Fq "GITHUB_OWNER = 'potienkon5'" "$FILE"
+          grep -Fq "GITHUB_REPO = 'Yasno-Project'" "$FILE"
+
+          if grep -q "REPLACE_WITH_GITHUB_USERNAME" "$FILE"; then
+            echo "ERROR: placeholder GitHub owner remains inside Android assets"
+            exit 1
+          fi
+          test -f capacitor/android/app/src/main/java/kz/yasno/classroom/YasnoUpdaterPlugin.java
+          test -f capacitor/android/app/src/main/assets/public/index.html
+          grep -Fq "LocalNotifications" capacitor/android/app/src/main/assets/public/index.html
+          grep -Fq "deadline-reminders.js" capacitor/android/app/src/main/assets/public/index.html
+          test -f capacitor/android/app/src/main/assets/public/deadline-reminders.js
+          grep -Fq 'yasno-build" content="' capacitor/android/app/src/main/assets/public/index.html
+          grep -Fq "LOAD_NO_CACHE" capacitor/android/app/src/main/java/kz/yasno/classroom/MainActivity.java
+          grep -Fq "android.permission.SCHEDULE_EXACT_ALARM" capacitor/android/app/src/main/AndroidManifest.xml
+          echo "SUCCESS: correct GitHub settings, native updater and Android notifications bundled"
+
       - name: Compile release APK
         working-directory: capacitor/android
         run: bash ./gradlew --no-daemon assembleRelease
