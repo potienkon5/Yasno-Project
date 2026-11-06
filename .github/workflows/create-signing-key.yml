@@ -1,0 +1,33 @@
+name: 1 - Create signing key once
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Java for keytool
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Create keystore (password set in GitHub Secret)
+        env:
+          STORE_PASSWORD: ${{ secrets.YASNO_KEYSTORE_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$STORE_PASSWORD" || { echo 'Create repository secret YASNO_KEYSTORE_PASSWORD first'; exit 1; }
+          mkdir -p signing-output
+          keytool -genkeypair -v -keystore signing-output/yasno-release.p12 -storetype PKCS12 \
+            -storepass "$STORE_PASSWORD" -keypass "$STORE_PASSWORD" \
+            -alias yasno -keyalg RSA -keysize 3072 -validity 10000 \
+            -dname 'CN=Yasno, OU=Mobile, O=Yasno, L=Semey, C=KZ'
+          base64 -w0 signing-output/yasno-release.p12 > signing-output/KEYSTORE_BASE64.txt
+      - name: Download this artifact once and store base64 in GitHub Actions secret
+        uses: actions/upload-artifact@v4
+        with:
+          name: yasno-signing-key-KEEP-PRIVATE
+          path: signing-output/
+          retention-days: 1

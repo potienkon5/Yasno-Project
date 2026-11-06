@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14244b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<title>Ясно</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Literata:wght@500;600&display=swap">
+<style>
+:root{--paper:#f8f8fb;--card:#fff;--ink:#14244b;--mute:#667090;--line:#e2e5ef;--navy:#14244b;--pink:#e48aa0;--pinkbg:#fbe5ea;--ok:#2c7a5b;--okbg:#e1f2ea;--g:#2c7a5b;--y:#b8800f;--r:#c4495a}
+@media (prefers-color-scheme:dark){:root{--paper:#0d1530;--card:#15214a;--ink:#eef1fb;--mute:#9aa4c4;--line:#27335f;--navy:#0a1128;--pink:#f0a2b5;--pinkbg:#4a2c40;--ok:#6fd0a4;--okbg:#17362f;--g:#6fd0a4;--y:#efbf5c;--r:#f08a98;color-scheme:dark}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.4 "Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--pink);outline-offset:2px}
+svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;position:relative}
+.top{background:var(--navy);color:#fff;padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px}
+.top small{font-size:12px;opacity:.7}.tr{display:flex;justify-content:space-between;align-items:center;margin-top:2px}
+h1{margin:0;font:600 24px/1.2 "Literata",Georgia,serif}
+.role{font-size:12px;font-weight:600;background:rgba(255,255,255,.14);border-radius:8px;padding:4px 10px}
+main{flex:1;overflow-y:auto;padding:6px 18px 24px}
+.lead{font:500 21px/1.3 "Literata",Georgia,serif;margin:18px 0 4px}
+.sub{display:flex;gap:22px;border-bottom:1px solid var(--line);margin-top:14px}
+.sub button{padding:10px 0;font-weight:600;color:var(--mute);border-bottom:2px solid transparent;margin-bottom:-1px}
+.sub button[aria-selected=true]{color:var(--ink);border-color:var(--pink)}
+h2{font:600 15px "Golos Text",sans-serif;margin:24px 0 2px}
+.it{display:flex;gap:12px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--line)}
+.bx{width:26px;height:26px;border-radius:7px;border:1.8px solid var(--mute);display:grid;place-items:center;color:var(--card);flex:none}
+.bx svg{width:15px;height:15px;stroke-width:3}.done .bx{background:var(--ink);border-color:var(--ink)}
+.done .t{text-decoration:line-through;color:var(--mute)}.bd{flex:1;min-width:0}
+.t{font-size:16px;font-weight:500}.s{font-size:13px;color:var(--mute);margin-top:2px}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px;background:var(--pinkbg);margin-top:6px}
+.tag.ok{background:var(--okbg);color:var(--ok)}
+.btn{background:var(--ink);color:var(--card);border-radius:10px;padding:10px 16px;font-weight:600;font-size:15px;min-height:44px}
+.btn.o{background:none;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line)}.btn.sm{padding:6px 11px;font-size:13px;min-height:36px;border-radius:8px}
+.btns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.wide{width:100%}
+.lnk{font-weight:600;font-size:14px;text-decoration:underline;text-decoration-color:var(--pink);text-underline-offset:4px;text-decoration-thickness:2px;margin-top:12px;display:inline-block;color:var(--ink)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-top:10px}
+.am{font:600 19px "Literata",Georgia,serif;white-space:nowrap}
+.bar{height:6px;border-radius:3px;background:var(--line);margin:10px 0 6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ink)}
+.dr{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--pinkbg);display:grid;place-items:center;font:600 14px "Literata",serif;flex:none}
+.sp{margin-left:auto;display:flex;gap:6px;flex:none}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:7px}.cg{background:var(--g)}.cy{background:var(--y)}.cr{background:var(--r)}
+.st{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:12px 0;gap:2px}.st i{display:block}
+.leg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.leg>*{border:1.5px solid var(--line);border-radius:12px;padding:10px;text-align:left;background:var(--card)}
+.leg button[aria-pressed=true]{border-color:var(--ink)}.leg b{display:block;font:600 24px "Literata",serif}.leg span{font-size:12px;color:var(--mute)}
+nav{display:flex;align-items:center;background:var(--card);border-top:1px solid var(--line);padding:4px 8px calc(env(safe-area-inset-bottom,0px) + 8px)}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--mute);padding:6px 0;position:relative}
+nav button[aria-current=page]{color:var(--ink)}nav button[aria-current=page]::after{content:"";position:absolute;bottom:-2px;width:18px;height:3px;border-radius:2px;background:var(--pink)}
+nav .fab{flex:none;width:48px;height:48px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;margin:0 6px;padding:0}nav .fab::after{display:none}
+#bg{position:fixed;inset:0;background:rgba(10,17,40,.5);display:none;align-items:flex-end;justify-content:center;z-index:5}#bg.on{display:flex}
+.sheet{background:var(--card);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:10px 20px calc(env(safe-area-inset-bottom,0px) + 22px);max-height:90%;overflow-y:auto}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 14px}.sheet h3,.reg h3{margin:0 0 2px;font:600 21px "Literata",Georgia,serif}
+textarea,input.f,select.f{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;font:inherit;background:var(--paper);color:var(--ink);margin-top:10px}textarea{min-height:110px}
+.mn{display:flex;width:100%;text-align:left;padding:14px 0;border-bottom:1px solid var(--line);font-weight:600}.mn small{display:block;font-weight:400;color:var(--mute);font-size:13px}
+.reg{padding:calc(env(safe-area-inset-top,0px) + 28px) 22px 28px;overflow-y:auto;height:100%}.reg .logo{font:600 34px "Literata",serif;margin-bottom:6px}
+.code{font:600 30px "Literata",serif;letter-spacing:.14em;margin:8px 0}
+#toast{position:fixed;left:16px;right:16px;bottom:84px;max-width:528px;margin:0 auto;background:var(--ink);color:var(--card);border-radius:10px;padding:11px 14px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:20}#toast.on{opacity:1}
+.hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(10,17,40,.68);z-index:30;pointer-events:none;transition:.25s}
+.tip{position:fixed;left:16px;right:16px;max-width:400px;margin:0 auto;background:var(--card);color:var(--ink);border-radius:14px;padding:16px;z-index:31;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.tip b{font:600 17px "Literata",serif}.tip p{margin:6px 0 0;font-size:14.5px;color:var(--mute)}.tip .btns{justify-content:space-between;align-items:center}
+.ck{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14px;color:var(--mute)}.ck input{margin-top:3px;width:20px;height:20px;flex:none}.ck a{color:var(--ink);font-weight:600}
+.empty{color:var(--mute);padding:20px 0;font-size:15px}.err{color:var(--r);font-size:14px;margin-top:8px}
+.fieldlabel{display:block;font-size:13px;font-weight:600;color:var(--mute);margin-top:12px}.reg h2{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}.reg .f{margin-top:5px}</style>
+</head>
+<body>
+<div id="app"></div><div id="bg"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div><div id="toast" role="status"></div>
+<script type="module">
+import cfg from './supabase-config.js';
+import {isAndroidApk,checkApkUpdate,installApkUpdate} from './apk-updater.js';
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',gen=n=>Array.from(crypto.getRandomValues(new Uint8Array(n)),b=>AL[b%AL.length]).join('');
+const rub=n=>Number(n).toLocaleString('ru-RU')+' ₸';
+const isoL=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const fmtD=s=>{if(!s)return'';const a=isoL(new Date()),b=isoL(new Date(Date.now()+864e5));return s===a?'Сегодня':s===b?'Завтра':new Date(s+'T12:00').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short'})};
+const tg=(d,n)=>{const x=[fmtD(d),n].filter(Boolean).join(' · ');return x?`<span class="tag">${esc(x)}</span>`:''};
+const WD=[/воскрес/i,/понедельн/i,/вторник/i,/сред/i,/четверг/i,/пятниц/i,/суббот/i];
+function dateWord(w){if(!w)return'';const d=new Date();if(/послезавтра/i.test(w))d.setDate(d.getDate()+2);else if(/завтра/i.test(w))d.setDate(d.getDate()+1);else if(!/сегодня/i.test(w)){const i=WD.findIndex(r=>r.test(w));if(i<0)return'';d.setDate(d.getDate()+((i-d.getDay()+7)%7||7))}return isoL(d)}
+const I={home:'<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11"/>',money:'<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.5 3.2-5.5 6.5-5.5s5.9 2 6.5 5.5M16 5a3.5 3.5 0 0 1 0 7M18 14.8c1.9.7 3.2 2.4 3.5 5.2"/>',more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24" aria-hidden="true">${I[n]}</svg>`;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2800)}
+
+const sb=createClient(cfg.url,cfg.anonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const S={tab:'home',sub:'t',step:0,mode:'register',reg:{},q:'',f:''};
+let uid=null,U=null,C=null,mem=[],tasks=[],hw=[],funds=[],boot=false,installEv=null,channel=null,loading=false;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEv=e;draw()});
+if(!isAndroidApk() && 'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(console.warn);
+let apkUpdate=null;
+let updateBusy=false;
+let updateState='Нажмите «Проверить обновления»';
+async function checkForApkUpdate(silent=false){
+ if(!isAndroidApk()||updateBusy)return;
+ updateBusy=true; updateState='Проверяем GitHub Releases…'; if(S.tab==='more')draw();
+ try {apkUpdate=await checkApkUpdate();updateState=apkUpdate.updateAvailable?`Новая версия ${apkUpdate.latest} (установлена ${apkUpdate.installed})`:`Установлена актуальная версия ${apkUpdate.installed}`;if(apkUpdate.updateAvailable&&!silent)toast('Доступна версия '+apkUpdate.latest)}
+ catch(e){updateState=e.message||String(e);if(!silent)toast(updateState)}
+ finally{updateBusy=false;if(S.tab==='more')draw()}
+}
+async function startApkUpdate(){
+ if(!apkUpdate?.updateAvailable||updateBusy)return;
+ if(!confirm(`Скачать обновление Ясно ${apkUpdate.latest}? После загрузки Android попросит подтвердить установку.`))return;
+ updateBusy=true; updateState='Скачивание APK…';draw();
+ try{await installApkUpdate(apkUpdate,p=>{updateState=p.percent>=0?`Загрузка APK: ${p.percent}%`:'Загружаем APK…';const label=document.getElementById('apk-update-status');if(label)label.textContent=updateState});updateState='Установщик Android открыт. Подтвердите обновление.'}
+ catch(e){updateState=e.message||String(e);toast(updateState)}
+ finally{updateBusy=false;draw()}
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isAndroidApk()&&U)checkForApkUpdate(true)});
+const check=(result)=>{if(result.error)throw result.error;return result.data};
+const rpc=(fn,args={})=>sb.rpc(fn,args).then(check);
+const must=(query)=>query.then(check);
+const errorMsg=e=>({invalid_credentials:'Неверный email или пароль',email_not_confirmed:'Подтвердите email по ссылке в письме',user_already_exists:'Пользователь уже существует'}[e.code]||e.message||String(e));
+const me=()=>mem.find(m=>m.id===uid)||{},adm=()=>!!me().admin;
+const famMem=f=>mem.filter(m=>m.fam===f);
+const debts=f=>funds.filter(x=>!(x.paid||{})[f]).length;
+const stat=f=>{const n=debts(f);return n===0?'g':n===1?'y':'r'};
+async function initSession(){
+  if(loading)return;loading=true;
+  try {
+    const {data:{session},error}=await sb.auth.getSession();if(error)throw error;
+    uid=session?.user.id||null;
+    if(!uid){U=null;C=null;mem=[];tasks=[];hw=[];funds=[];channel&&sb.removeChannel(channel);channel=null;boot=true;draw();return}
+    const md=session.user.user_metadata||{};
+    let p=check(await sb.from('profiles').select('*').eq('id',uid).maybeSingle());
+    if(!p && md.first_name){
+      p=check(await sb.from('profiles').upsert({id:uid,first_name:md.first_name,last_name:md.last_name,middle_name:md.middle_name||'',phone:md.phone,relation:md.relation,child_first:md.child_first,child_last:md.child_last,grade:md.grade,school:md.school||'',city:md.city||''}).select().single());
+    }
+    if(!p){U=null;S.mode='register';boot=true;draw();return}
+    const m=check(await sb.from('members').select('*').eq('user_id',uid).maybeSingle());
+    U={name:p.first_name+' '+p.last_name,phone:p.phone,kid:p.child_first+' '+p.child_last,kidClass:p.grade,profile:p,cls:m?.class_code||null,fam:m?.family_id||null,famCode:null};
+    if(!m){boot=true;S.step=1;draw();return}
+    const f=check(await sb.from('families').select('invite_code').eq('id',m.family_id).single());
+    U.famCode=f.invite_code;
+    await loadClass();subscribe();boot=true;draw();
+  }catch(e){boot=true;toast('Загрузка: '+errorMsg(e));draw()}finally{loading=false}
+}
+async function loadClass(){
+ if(!U?.cls)return;
+ const [c,mm,profiles,items]=await Promise.all([
+   must(sb.from('classes').select('*').eq('code',U.cls).single()),
+   must(sb.from('members').select('*').eq('class_code',U.cls)),
+   must(sb.from('profiles').select('*')),
+   must(sb.from('class_items').select('*').eq('class_code',U.cls).order('created_at',{ascending:false}))
+ ]);
+ C={name:c.name};
+ const lookup=new Map(profiles.map(p=>[p.id,p]));
+ mem=mm.map(m=>{const p=lookup.get(m.user_id)||{};return {id:m.user_id,admin:m.is_admin,fam:m.family_id,name:[p.first_name,p.last_name].filter(Boolean).join(' ')||'Родитель',phone:p.phone||'',kid:[p.child_first,p.child_last].filter(Boolean).join(' ')||''}});
+ const reshape=x=>({id:x.id,t:new Date(x.created_at).getTime(),...x.payload});
+ tasks=items.filter(x=>x.kind==='tasks').map(reshape);hw=items.filter(x=>x.kind==='homework').map(reshape);funds=items.filter(x=>x.kind==='funds').map(reshape);
+ if(boot)draw();
+}
+let pendingRefresh=false;
+function subscribe(){
+ if(channel)sb.removeChannel(channel);
+ channel=sb.channel('yasno-'+U.cls)
+ .on('postgres_changes',{event:'*',schema:'public',table:'class_items',filter:'class_code=eq.'+U.cls},evt=>{refreshSoon();if(evt.eventType==='INSERT'&&evt.new?.created_by!==uid){const names={tasks:'Новое дело',homework:'Новое домашнее задание',funds:'Новый сбор'};announce('Ясно',names[evt.new?.kind]||'Изменение в классе')}})
+ .on('postgres_changes',{event:'*',schema:'public',table:'members',filter:'class_code=eq.'+U.cls},()=>refreshSoon())
+ .subscribe();
+}
+function refreshSoon(){if(pendingRefresh)return;pendingRefresh=true;setTimeout(async()=>{pendingRefresh=false;try{await loadClass()}catch(e){console.warn(e)}},400)}
+addEventListener('focus',()=>{if(uid&&U?.cls)refreshSoon()});
+addEventListener('online',()=>{if(uid&&U?.cls)refreshSoon()});
+setInterval(()=>{if(uid&&U?.cls&&!document.hidden)refreshSoon()},30000);
+if(!cfg.url||cfg.url.includes('YOUR_PROJECT')||!cfg.anonKey||cfg.anonKey.includes('PASTE_')){
+ $('#app').innerHTML='<div class="reg"><div class="logo">Ясно</div><h3>Подключите Supabase</h3><p>Заполните <b>supabase-config.js</b> и выполните <b>schema.sql</b>. Пошаговая инструкция — INSTALL_RU.md.</p></div>';
+}else{
+ sb.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY'){S.mode='recover';boot=true;draw();return}setTimeout(initSession,0)});
+ initSession();
+}
+function regView(){
+ const r=S.reg;
+ if(S.mode==='recover')return `<div class="reg"><div class="logo">Ясно</div><h3>Новый пароль</h3><p class="s">Введите новый пароль для аккаунта.</p><input class="f" type="password" id="newpassword" placeholder="Пароль от 8 символов"><input class="f" type="password" id="newpassword2" placeholder="Повторите пароль"><div class="err" id="err"></div><div class="btns"><button class="btn wide" data-a="setPassword">Сохранить пароль</button></div></div>`;
+ if(!uid){
+  if(S.mode==='login')return `<div class="reg"><div class="logo">Ясно</div><h3>Вход в аккаунт</h3><p class="s">Данные синхронизируются на всех ваших телефонах.</p>
+   <label class="fieldlabel">Электронная почта</label><input class="f" id="email" type="email" autocomplete="email" placeholder="name@example.com">
+   <label class="fieldlabel">Пароль</label><input class="f" id="password" type="password" autocomplete="current-password" placeholder="Введите пароль">
+   <div class="err" id="err"></div><div class="btns"><button class="btn wide" data-a="login">Войти</button></div>
+   <button class="lnk" data-a="forgot">Забыли пароль?</button><br><button class="lnk" data-a="showRegister">Создать аккаунт</button></div>`;
+  return `<div class="reg"><div class="logo">Ясно</div><h3>Регистрация родителя</h3><p class="s">Создайте защищённую учётную запись. Поля со звёздочкой обязательны.</p>
+   <h2>Данные взрослого</h2>
+   <label class="fieldlabel">Имя *</label><input class="f" id="n1" autocomplete="given-name" placeholder="Имя" value="${esc(r.first_name)}">
+   <label class="fieldlabel">Фамилия *</label><input class="f" id="n2" autocomplete="family-name" placeholder="Фамилия" value="${esc(r.last_name)}">
+   <label class="fieldlabel">Отчество (необязательно)</label><input class="f" id="n3" placeholder="Отчество" value="${esc(r.middle_name)}">
+   <label class="fieldlabel">Телефон *</label><input class="f" id="n4" type="tel" autocomplete="tel" placeholder="+7 7XX XXX XX XX" value="${esc(r.phone)}">
+   <label class="fieldlabel">Кем вы приходитесь ребёнку? *</label><select class="f" id="n5"><option value="">Выберите</option>${[['mother','Мама'],['father','Папа'],['guardian','Опекун'],['relative','Родственник'],['teacher','Учитель / классный руководитель']].map(([v,t])=>`<option value="${v}" ${r.relation===v?'selected':''}>${t}</option>`).join('')}</select>
+   <h2>Ребёнок и школа</h2>
+   <label class="fieldlabel">Имя ребёнка *</label><input class="f" id="n6" placeholder="Имя ребёнка" value="${esc(r.child_first)}">
+   <label class="fieldlabel">Фамилия ребёнка *</label><input class="f" id="n7" placeholder="Фамилия ребёнка" value="${esc(r.child_last)}">
+   <label class="fieldlabel">Класс *</label><input class="f" id="n8" placeholder="Например: 3Б" maxlength="4" value="${esc(r.grade)}">
+   <label class="fieldlabel">Школа (необязательно)</label><input class="f" id="n9" placeholder="Например: школа № 12" value="${esc(r.school)}">
+   <label class="fieldlabel">Город (необязательно)</label><input class="f" id="n10" placeholder="Город" value="${esc(r.city)}">
+   <h2>Данные для входа</h2>
+   <label class="fieldlabel">Электронная почта *</label><input class="f" id="email" type="email" autocomplete="email" placeholder="name@example.com" value="${esc(r.email)}">
+   <label class="fieldlabel">Пароль (от 8 символов) *</label><input class="f" id="password" type="password" autocomplete="new-password" placeholder="Придумайте пароль">
+   <label class="fieldlabel">Повторите пароль *</label><input class="f" id="password2" type="password" autocomplete="new-password" placeholder="Повторите пароль">
+   <label class="ck"><input type="checkbox" id="ok"><span>Я подтверждаю, что являюсь совершеннолетним или действую с разрешения законного представителя ребёнка, и принимаю <a href="privacy.html" target="_blank">политику конфиденциальности</a>.</span></label>
+   <div class="err" id="err"></div><div class="btns"><button class="btn wide" data-a="register">Создать аккаунт</button></div>
+   <button class="lnk" data-a="showLogin">Уже есть аккаунт? Войти</button></div>`;
+ }
+ const pre=new URLSearchParams(location.search).get('code')||'';
+ return `<div class="reg"><div class="logo">Ясно</div><h3>Подключение к классу</h3><p class="s">Аккаунт создан. Теперь создайте новый класс или присоединитесь к существующему.</p>
+  <div class="box"><div class="t">У меня есть код класса</div><input class="f" id="cd" placeholder="Код класса" maxlength="6" autocapitalize="characters" value="${esc(pre.toUpperCase())}"><div class="btns"><button class="btn wide" data-a="joinClass">Присоединиться к классу</button></div></div>
+  <div class="box"><div class="t">Я создаю класс</div><div class="s">Вы получите код, чтобы пригласить родителей.</div><div class="btns"><button class="btn o wide" data-a="makeClass">Создать ${esc(U?.kidClass||'мой класс')}</button></div></div>
+  <div class="err" id="err"></div><button class="lnk" data-a="logout">Выйти из аккаунта</button></div>`;
+}
+function taskRow(t){return `<div class="it${t.done?' done':''}"><button class="bx" data-a="tdone" data-id="${t.id}" aria-label="Выполнено">${t.done?ic('check'):''}</button><div class="bd"><div class="t">${esc(t.title)}</div><div class="s">${esc(t.byName||'')}${t.takenBy?' · взял(а): '+esc(t.takenBy):''}</div>${tg(t.date,t.when)}
+  <div>${!t.takenBy&&!t.done?`<button class="lnk" data-a="take" data-id="${t.id}">Беру на себя</button> `:''}${(adm()||t.by===uid)?`<button class="lnk" style="margin-left:14px;color:var(--mute)" data-a="del" data-c="tasks" data-id="${t.id}">Удалить</button>`:''}</div></div></div>`}
+function hwRow(x){const d=(x.doneBy||[]).includes(U.fam);return `<div class="it${d?' done':''}"><button class="bx" data-a="hdone" data-id="${x.id}" aria-label="Выполнено">${d?ic('check'):''}</button><div class="bd"><div class="s" style="margin:0 0 2px;font-weight:600">${esc(x.subj)}</div><div class="t">${esc(x.text)}</div>${tg(x.date,x.due)}${(adm()||x.by===uid)?`<div><button class="lnk" style="color:var(--mute)" data-a="del" data-c="homework" data-id="${x.id}">Удалить</button></div>`:''}</div></div>`}
+function home(){
+  const open=tasks.filter(t=>!t.done).length,hwo=hw.filter(x=>!(x.doneBy||[]).includes(U.fam)).length,dn=debts(U.fam);
+  let h=banner()+`<p class="lead">${open+hwo+dn?`Дел: ${open}, домашек: ${hwo}, сборов к оплате: ${dn}`:'Пока всё спокойно'}</p><div class="sub" role="tablist"><button role="tab" data-a="sub" data-v="t" aria-selected="${S.sub==='t'}">Дела</button><button role="tab" data-a="sub" data-v="h" aria-selected="${S.sub==='h'}">Домашка</button></div>`;
+  const L=(S.sub==='t'?tasks:hw).slice().sort((a,b)=>b.t-a.t);
+  if(!L.length)return h+`<div class="empty">${S.sub==='t'?'Дел пока нет. Нажмите «+», чтобы добавить первое или вставить сообщение из чата.':'Домашних заданий пока нет. Нажмите «+» и выберите «Домашнее задание».'}</div>`;
+  return h+L.map(S.sub==='t'?taskRow:hwRow).join('');
+}
+function money(){
+  const a=adm();let h=`<p class="lead">${a?'Сборы класса':'Ваши сборы'}</p>`;
+  if(a)h+=`<button class="btn" data-a="sheet" data-k="fund">Новый сбор</button>`;
+  if(!funds.length)return h+`<div class="empty">${a?'Сборов пока нет. Создайте первый кнопкой выше.':'Староста ещё не создавал сборы.'}</div>`;
+  const fams=[...new Set(mem.map(m=>m.fam))];
+  funds.slice().sort((x,y)=>y.t-x.t).forEach(f=>{
+    const paid=f.paid||{},n=fams.filter(x=>paid[x]).length,pct=fams.length?Math.round(n/fams.length*100):0,mine=!!paid[U.fam];
+    h+=`<div class="box"><div style="display:flex;justify-content:space-between;gap:10px"><div><div class="t">${esc(f.title)}</div><div class="s">${esc(f.date?'до '+fmtD(f.date).toLowerCase():(f.deadline||''))}</div></div><div class="am">${rub(f.amount)}</div></div><div class="bar"><i style="width:${pct}%"></i></div><div class="s">Сдали ${n} из ${fams.length} семей</div>`;
+    if(a){fams.filter(x=>!paid[x]).forEach(x=>{const m=famMem(x);h+=`<div class="dr"><span class="av">${esc((m[0]?.name||'?')[0])}</span><span>${esc(m.map(y=>y.name).join(', '))}<span class="s" style="display:block;margin:0">${esc([...new Set(m.map(y=>y.kid))].join(', '))}</span></span><span class="sp"><button class="btn sm" data-a="pay" data-id="${f.id}" data-fam="${x}">Сдал(а)</button></span></div>`});
+      h+=`<div class="btns"><button class="btn o sm" data-a="del" data-c="funds" data-id="${f.id}">Удалить сбор</button></div>`}
+    else h+=mine?`<span class="tag ok">Вы сдали</span> <button class="lnk" data-a="unpay" data-id="${f.id}" data-fam="${U.fam}" style="color:var(--mute)">Отменить</button>`:`<div class="btns"><button class="btn" data-a="pay" data-id="${f.id}" data-fam="${U.fam}">Мы сдали</button></div>`;
+    h+='</div>';
+  });
+  return h;
+}
+function cls(){
+  const fams=[...new Set(mem.map(m=>m.fam))],a=adm(),q=S.q.toLowerCase();
+  let h=`<p class="lead">${fams.length} ${fams.length===1?'семья':'семей'} в классе</p><div class="box"><div class="s">Код класса</div><div class="code">${esc(U.cls)}</div><button class="btn" data-a="share">Пригласить родителей</button><div class="s" style="margin-top:8px">Отправьте ссылку или код только родителям своего класса.</div></div>`;
+  if(funds.length){const c={g:0,y:0,r:0};fams.forEach(f=>c[stat(f)]++);const L={g:'вовремя',y:'1 долг',r:'2+ долга'};
+    h+=`<div class="box"><div class="t">Как класс платит</div><div class="st">${['g','y','r'].filter(k=>c[k]).map(k=>`<i class="c${k}" style="width:${c[k]/fams.length*100}%"></i>`).join('')}</div><div class="leg">${['g','y','r'].map(k=>{const x=`<b>${c[k]}</b><span><i class="dot c${k}"></i>${L[k]}</span>`;return a?`<button data-a="flt" data-v="${S.f===k?'':k}" aria-pressed="${S.f===k}">${x}</button>`:`<div>${x}</div>`}).join('')}</div>${a?'':'<div class="s" style="margin-top:10px">Имена видит только староста.</div>'}</div>`}
+  h+=`<input class="f" id="q" placeholder="Поиск по родителю или ребёнку" value="${esc(S.q)}"><div id="pl">${plist()}</div>`;return h;
+}
+function plist(){
+  const a=adm(),q=S.q.toLowerCase(),fams=[...new Set(mem.map(m=>m.fam))].filter(f=>{const m=famMem(f),txt=m.map(y=>y.name+' '+y.kid).join(' ').toLowerCase();return(!q||txt.includes(q))&&(!S.f||!a||stat(f)===S.f)});
+  if(!fams.length)return '<div class="empty">Никого не нашли.</div>';
+  return fams.map(f=>{const m=famMem(f);return `<div class="it"><span class="av">${esc((m[0]?.name||'?')[0])}</span><div class="bd"><div class="t">${a&&funds.length?`<i class="dot c${stat(f)}"></i>`:''}${esc(m.map(y=>y.name).join(', '))}${m.some(y=>y.admin)?' <span class="tag" style="margin:0 0 0 4px">староста</span>':''}</div><div class="s">Ребёнок: ${esc([...new Set(m.map(y=>y.kid))].join(', '))}</div><div class="s">${esc(m.map(y=>y.phone).join(', '))}</div>${a&&f!==U.fam?`<button class="lnk" data-a="makeAdmin" data-id="${m[0].id}" style="color:var(--mute)">Сделать старостой</button>`:''}</div></div>`}).join('');
+}
+function more(){
+  const fm=famMem(U.fam);
+  return `<p class="lead">Ваша семья</p><div class="box">${fm.map(m=>`<div class="dr" style="border:0;padding:5px 0"><span class="av">${esc((m.name||'?')[0])}</span>${esc(m.name)}${m.id===uid?' <span class="s">(вы)</span>':''}</div>`).join('')}
+  <div class="s" style="margin-top:8px">До 3 учётных записей одной семьи. Все видят одни и те же дела и сборы.</div>
+  ${fm.length<3?`<div class="s" style="margin-top:12px">Код семьи</div><div class="code">${esc(U.famCode)}</div><button class="btn o" data-a="shareFam">Позвать в семью</button>`:'<span class="tag ok">Семья заполнена: 3 из 3</span>'}</div>
+  <h2>Уже есть код семьи?</h2><input class="f" id="fc" placeholder="Код семьи" maxlength="8" autocapitalize="characters"><div class="btns"><button class="btn o" data-a="joinFam">Присоединиться к семье</button></div>
+  <h2>Напоминания</h2><div class="box"><div class="t">${pushIs()?'Включены на этом телефоне':'Выключены'}</div><div class="s">При открытом приложении работают напоминания и оповещения. Для фонового Web Push нужно дополнительно развернуть функцию уведомлений.</div><div class="btns"><button class="btn${pushIs()?' o':''}" data-a="${pushIs()?'pushDisable':'pushEnable'}">${pushIs()?'Выключить':'Включить напоминания'}</button></div></div>
+  <h2>Аккаунт</h2><div class="box"><div class="t">${esc(U.name)}</div><div class="s">${esc(U.profile?.school||'')} · ${esc(U.profile?.city||'')}</div><div class="s">Синхронизация по email и паролю</div><button class="lnk" data-a="logout">Выйти</button></div>
+  <h2>Обновления Android</h2>${isAndroidApk()?`<div class="box"><div class="t">Обновления через GitHub Releases</div><div class="s" id="apk-update-status">${esc(updateState)}</div><div class="btns"><button class="btn o" data-a="apkCheck" ${updateBusy?'disabled':''}>Проверить обновления</button>${apkUpdate?.updateAvailable?`<button class="btn" data-a="apkInstall" ${updateBusy?'disabled':''}>Скачать и установить ${esc(apkUpdate.latest)}</button>`:''}</div></div>`:'<div class="s">Обновления APK доступны только в Android-сборке.</div>'}
+  <h2>Приложение</h2>${installEv?'<button class="btn" data-a="install">Установить на телефон</button>':'<div class="s">В меню браузера выберите «Установить приложение» или «Добавить на главный экран».</div>'}
+  <div class="btns"><button class="btn o sm" data-a="tour">Показать подсказки снова</button></div>
+  <h2>Данные</h2><a class="lnk" href="privacy.html" target="_blank">Политика конфиденциальности</a><div class="btns"><button class="btn o sm" data-a="delAcc">Покинуть класс</button></div>`;
+}
+function draw(){
+  const a=$('#app');if(!boot)return;
+  if(S.mode==='recover'){a.innerHTML=regView();return}
+  if(!U||!U.cls){a.innerHTML=regView();return}
+  const T=[['home','Дневник','home'],['money','Сборы','money'],['+'],['cls','Класс','users'],['more','Ещё','more']];
+  a.innerHTML=`<div class="top"><small>Школа</small><div class="tr"><h1>${esc(C?.name||U.kidClass)} класс</h1><span class="role">${adm()?'староста':'родитель'}</span></div></div><main>${S.tab==='home'?home():S.tab==='money'?money():S.tab==='cls'?cls():more()}</main>
+  <nav>${T.map(t=>t[0]==='+'?`<button class="fab" id="fab" data-a="sheet" data-k="menu" aria-label="Добавить">${ic('plus')}</button>`:`<button data-tab="${t[0]}" data-a="tab" data-v="${t[0]}"${S.tab===t[0]?' aria-current="page"':''}>${ic(t[2])}${t[1]}</button>`).join('')}</nav>`;
+}
+
+/* ---------- sheets ---------- */
+const SUBJ=['Математика','Русский язык','Литература','Английский язык','Окружающий мир','Физкультура','Технология','Музыка','ИЗО'];
+function sheet(k){
+  let h='<div class="grab"></div>';
+  if(k==='menu')h+=`<h3>Добавить</h3><button class="mn" data-a="sheet" data-k="chat"><span>Из чата<small>Вставьте сообщение родителей</small></span></button><button class="mn" data-a="sheet" data-k="task"><span>Дело<small>Что принести, сделать, куда прийти</small></span></button><button class="mn" data-a="sheet" data-k="hw"><span>Домашнее задание<small>Предмет, задание, срок</small></span></button>${adm()?'<button class="mn" data-a="sheet" data-k="fund"><span>Сбор денег<small>Сумма с семьи и срок</small></span></button>':''}`;
+  if(k==='chat')h+=`<h3>Из чата</h3><div class="s">Вставьте текст сообщения из WhatsApp или Telegram.</div><textarea id="ct" aria-label="Текст"></textarea><div class="btns"><button class="btn wide" data-a="parse">Разобрать</button></div>`;
+  if(k==='task')h+=`<h3>Новое дело</h3><input class="f" id="a1" placeholder="Что нужно сделать"><div class="s" style="margin-top:12px">Дата (по ней придёт напоминание)</div><input class="f" id="a2" type="date" style="margin-top:4px"><input class="f" id="a4" placeholder="Время или уточнение, например 18:30"><div class="btns"><button class="btn wide" data-a="addTask">Добавить</button></div>`;
+  if(k==='hw')h+=`<h3>Домашнее задание</h3><input class="f" id="a1" list="sb" placeholder="Предмет"><datalist id="sb">${SUBJ.map(s=>`<option>${s}</option>`).join('')}</datalist><input class="f" id="a2" placeholder="Что задали"><div class="s" style="margin-top:12px">Сдать к (по этой дате придёт напоминание)</div><input class="f" id="a3" type="date" style="margin-top:4px"><div class="btns"><button class="btn wide" data-a="addHw">Добавить</button></div>`;
+  if(k==='fund')h+=`<h3>Новый сбор</h3><input class="f" id="a1" placeholder="На что собираем"><input class="f" id="a2" type="number" inputmode="numeric" placeholder="Сумма с семьи, ₸"><div class="s" style="margin-top:12px">Сдать до (по этой дате придёт напоминание)</div><input class="f" id="a3" type="date" style="margin-top:4px"><div class="btns"><button class="btn wide" data-a="addFund">Создать</button></div>`;
+  $('#sheet').innerHTML=h;$('#bg').classList.add('on');
+}
+const close=()=>$('#bg').classList.remove('on');
+const v=id=>($('#'+id)?.value||'').trim();
+
+
+/* ---------- parse chat ---------- */
+function parse(text){
+  const out=[];text.split(/(?<=[.!?])\s+|\n+/).forEach(s=>{
+    s=s.trim();if(!s)return;
+    const d=(s.match(/(сегодня|завтра|послезавтра|понедельник\w*|вторник\w*|сред\w*|четверг\w*|пятниц\w*|суббот\w*)/i)||[])[1]||'',w=d?d[0].toUpperCase()+d.slice(1):'';
+    const m=s.match(/(\d[\d\s]*)\s*(₽|руб\w*|р\b|тг|грн)/i),isHw=/упр\.|№|стр\.|параграф|по (математике|русскому|литературе|английскому)/i.test(s),task=/надо|нужно|берём|принести|взять|подготовить|сдать/i.test(s),meet=/собрание|экскурси|утренник|концерт|олимпиад/i.test(s);
+    if(!(m||isHw||task||meet))return;
+    const t=s.replace(/^(Добрый (вечер|день)!|Напоминаю,?)\s*/i,'').replace(/[.!]+$/,'');
+    if(isHw){const sb=/математ/i.test(s)?'Математика':/русск/i.test(s)?'Русский язык':/литерат/i.test(s)?'Литература':/англ/i.test(s)?'Английский язык':'Задание';out.push({k:'hw',subj:sb,text:t,date:dateWord(w)})}
+    else if(m&&adm())out.push({k:'fund',title:t.slice(0,60),amount:parseInt(m[1].replace(/\s/g,''),10),date:dateWord(w)})
+    else out.push({k:'task',title:t,date:dateWord(w)});
+  });return out;
+}
+let pend=[];
+
+const lock=async f=>{try{await f()}catch(e){console.error(e);toast('Ошибка: '+errorMsg(e));const el=$('#err');if(el)el.textContent=errorMsg(e)}};
+const saveItem=async(kind,payload)=>{await rpc('add_class_item',{p_kind:kind,p_payload:payload});refreshSoon()};
+const changeItem=async(id,action,value=null)=>{await rpc('change_class_item',{p_id:id,p_action:action,p_value:value});refreshSoon()};
+const A={
+ showLogin:()=>{S.mode='login';draw()},showRegister:()=>{S.mode='register';draw()},
+ register:()=>lock(async()=>{
+  const r={first_name:v('n1'),last_name:v('n2'),middle_name:v('n3'),phone:v('n4'),relation:v('n5'),child_first:v('n6'),child_last:v('n7'),grade:v('n8').toUpperCase().replace(/\s/g,''),school:v('n9'),city:v('n10'),email:v('email').toLowerCase()};
+  const pwd=v('password'),repeat=v('password2');
+  if(!r.first_name||!r.last_name||r.phone.replace(/\D/g,'').length<10||!r.relation||!r.child_first||!r.child_last||!/^[0-9]{1,2}[А-ЯA-Z]?$/.test(r.grade)||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(r.email))throw Error('Заполните обязательные поля и укажите правильные email, телефон и класс');
+  if(pwd.length<8)throw Error('Пароль должен содержать не менее 8 символов');
+  if(pwd!==repeat)throw Error('Пароли не совпадают');
+  if(!$('#ok').checked)throw Error('Примите политику конфиденциальности');
+  S.reg=r;
+  const {data,error}=await sb.auth.signUp({email:r.email,password:pwd,options:{data:{...r,email:undefined},emailRedirectTo:location.origin+location.pathname}});
+  if(error)throw error;
+  if(!data.session){toast('Проверьте почту: откройте ссылку подтверждения, потом войдите');S.mode='login';draw();return}
+  await initSession();
+ }),
+ setPassword:()=>lock(async()=>{const pwd=v('newpassword');if(pwd.length<8||pwd!==v('newpassword2'))throw Error('Пароль от 8 символов, оба поля должны совпадать');check(await sb.auth.updateUser({password:pwd}));S.mode='login';toast('Пароль изменён');await initSession()}),
+ login:()=>lock(async()=>{const email=v('email'),password=v('password');if(!email||!password)throw Error('Введите email и пароль');check(await sb.auth.signInWithPassword({email,password}));await initSession()}),
+ forgot:()=>lock(async()=>{const email=v('email');if(!email)throw Error('Укажите email в поле выше');check(await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname}));toast('Если адрес зарегистрирован, на него отправлено письмо для восстановления')}),
+ logout:()=>lock(async()=>{check(await sb.auth.signOut());uid=null;U=null;S.mode='login';draw()}),
+ tab:d=>{S.tab=d.v;draw()},sub:d=>{S.sub=d.v;draw()},flt:d=>{S.f=d.v;draw()},sheet:d=>sheet(d.k),
+ makeClass:()=>lock(async()=>{const code=await rpc('create_class',{p_grade:U.kidClass});toast('Класс создан: '+code);await initSession()}),
+ joinClass:()=>lock(async()=>{const code=v('cd').toUpperCase();if(!/^[A-Z2-9]{6}$/.test(code))throw Error('Код класса — шесть символов');await rpc('join_class',{p_code:code});await initSession()}),
+ addTask:()=>lock(async()=>{const title=v('a1');if(!title)throw Error('Напишите, что нужно сделать');await saveItem('tasks',{title,when:v('a4'),date:v('a2'),byName:U.name,done:false});close();S.tab='home';S.sub='t';draw()}),
+ addHw:()=>lock(async()=>{const text=v('a2');if(!text)throw Error('Напишите домашнее задание');await saveItem('homework',{subj:v('a1')||'Задание',text,date:v('a3'),doneBy:[]});close();S.tab='home';S.sub='h';draw()}),
+ addFund:()=>lock(async()=>{const title=v('a1'),amount=parseInt(v('a2'),10);if(!title||!Number.isInteger(amount)||amount<=0)throw Error('Введите назначение и сумму');await saveItem('funds',{title,amount,date:v('a3'),paid:{}});close();S.tab='money';draw()}),
+ tdone:d=>lock(()=>changeItem(d.id,'toggle_task')),
+ take:d=>lock(()=>changeItem(d.id,'take',U.name)),
+ hdone:d=>lock(()=>changeItem(d.id,'toggle_homework')),
+ pay:d=>lock(()=>changeItem(d.id,'pay',d.fam)),
+ unpay:d=>lock(()=>changeItem(d.id,'unpay',d.fam)),
+ del:d=>{if(confirm('Удалить запись?'))lock(()=>changeItem(d.id,'delete'))},
+ parse(){pend=parse(v('ct'));if(!pend.length){toast('Ничего важного не нашли');return}
+  $('#sheet').innerHTML='<div class="grab"></div><h3>Нашли: '+pend.length+'</h3>'+pend.map(p=>`<div class="it"><div class="bd"><div class="s">${{hw:'Домашка',fund:'Сбор',task:'Дело'}[p.k]}</div><div class="t">${esc(p.title||p.text)}</div><div class="s">${esc(fmtD(p.date))}${p.amount?' · '+rub(p.amount):''}</div></div></div>`).join('')+'<div class="btns"><button class="btn wide" data-a="addAll">Добавить всё</button></div>'},
+ addAll:()=>lock(async()=>{for(const p of pend){if(p.k==='hw')await saveItem('homework',{subj:p.subj,text:p.text,date:p.date||'',doneBy:[]});else if(p.k==='fund')await saveItem('funds',{title:p.title,amount:p.amount,date:p.date||'',paid:{}});else await saveItem('tasks',{title:p.title,date:p.date||'',when:'',byName:U.name,done:false})}pend=[];close();S.tab='home';draw()}),
+ share:()=>shareIt('Присоединяйтесь к нашему классу в «Ясно». Код класса: '+U.cls,location.origin+location.pathname+'?code='+U.cls),
+ shareFam:()=>shareIt('Код нашей семьи в «Ясно»: '+U.famCode,location.origin+location.pathname),
+ joinFam:()=>lock(async()=>{const code=v('fc').toUpperCase();if(!/^[A-Z2-9]{8}$/.test(code))throw Error('Код семьи состоит из восьми символов');await rpc('join_family',{p_code:code});await initSession();toast('Семья подключена')}),
+ makeAdmin:d=>{if(!confirm('Передать управление этим родителю?'))return;lock(async()=>{await rpc('transfer_admin',{p_new_admin:d.id});await initSession();toast('Права переданы')})},
+ apkCheck:()=>checkForApkUpdate(false),apkInstall:()=>startApkUpdate(),
+ install:async()=>{if(installEv){await installEv.prompt();installEv=null;draw()}},tour:()=>tour(true),
+ pushEnable:()=>lock(pushEnable),pushDisable:()=>lock(pushDisable),pushHide:()=>{localStorage.pushHide='1';draw()},
+ delAcc:()=>{if(!confirm('Покинуть класс и удалить профиль приложения? Данные входа Supabase Auth останутся, пока администратор не удалит аккаунт на сервере.'))return;lock(async()=>{await rpc('leave_class');await initSession();toast('Вы покинули класс. Для полного удаления учётной записи обратитесь к администратору.')})}
+};
+const pushIs=()=>'Notification' in window&&Notification.permission==='granted'&&!!localStorage.yasnoPush;
+const banner=()=>(!('Notification' in window)||pushIs()||Notification.permission==='denied'||localStorage.pushHide)?'':'<div class="box"><div class="t">Разрешите уведомления</div><div class="s">Уведомления о событиях отображаются при открытом приложении. Для фонового Web Push потребуется серверная функция из инструкции.</div><div class="btns"><button class="btn sm" data-a="pushEnable">Включить</button><button class="btn o sm" data-a="pushHide">Не сейчас</button></div></div>';
+async function pushEnable(){
+ if(!('Notification' in window)||!('serviceWorker' in navigator))throw Error('Этот браузер не поддерживает уведомления');
+ const permission=await Notification.requestPermission();if(permission!=='granted')throw Error('Разрешите уведомления в настройках браузера');
+ localStorage.yasnoPush='1';
+ if(cfg.vapidPublicKey){
+  const reg=await navigator.serviceWorker.ready;
+  const base64=cfg.vapidPublicKey.replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64.padEnd(Math.ceil(base64.length/4)*4,'='));
+  const bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:bytes});
+  check(await sb.from('push_subscriptions').upsert({user_id:uid,endpoint:sub.endpoint,subscription:sub.toJSON()},{onConflict:'user_id,endpoint'}));
+ }
+ toast(cfg.vapidPublicKey?'Уведомления разрешены. Фоновая доставка требует запуска серверной функции.':'Уведомления разрешены для открытого приложения');draw();
+}
+async function pushDisable(){
+ try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){check(await sb.from('push_subscriptions').delete().eq('user_id',uid).eq('endpoint',sub.endpoint));await sub.unsubscribe()}}catch(e){console.warn(e)}
+ delete localStorage.yasnoPush;toast('Уведомления выключены');draw();
+}
+function announce(title,body){if(!pushIs())return;try{new Notification(title,{body,icon:'icon-192.png'})}catch(e){console.warn(e)}}
+async function shareIt(text,url){try{if(navigator.share){await navigator.share({title:'Ясно',text,url});return}}catch(e){return}try{await navigator.clipboard.writeText(text+' '+url);toast('Скопировано')}catch(e){toast(text)}}
+document.addEventListener('click',e=>{if(e.target.id==='bg'){close();return}const b=e.target.closest('[data-a]');if(b)A[b.dataset.a]?.(b.dataset)});
+document.addEventListener('input',e=>{if(e.target.id==='q'){S.q=e.target.value;$('#pl').innerHTML=plist()}});
+// Напоминания пока приложение открыто; фоновые гарантии требуют Web Push / нативных планировщиков.
+setInterval(()=>{if(!U||!pushIs())return;const d=new Date();const hh=d.getHours(),mm=d.getMinutes(),key=isoL(d)+'-'+hh;if(!((hh===7&&mm===30)||(hh===18&&mm===0))||localStorage.yasnoReminder===key)return;
+ localStorage.yasnoReminder=key;const today=hh===7?isoL(d):isoL(new Date(Date.now()+864e5));const count=tasks.filter(x=>!x.done&&x.date===today).length+hw.filter(x=>x.date===today&&!(x.doneBy||[]).includes(U.fam)).length+debts(U.fam);
+ if(count)announce('Ясно · '+(hh===7?'На сегодня':'На завтра'),`Задач и неоплаченных сборов: ${count}`);
+},30000);
+/* ---------- first-run tour ---------- */
+function tour(force){
+  const steps=[['#fab','Сюда добавляйте всё','Дела, домашние задания и сборы. Можно вставить сообщение из родительского чата, приложение само найдёт важное.'],
+  ['[data-tab=money]','Сборы денег','Староста создаёт сбор, родители отмечают «Мы сдали». Все видят, сколько собрано.'],
+  ['[data-tab=cls]','Класс и приглашение','Здесь список родителей и код класса. Отправьте его только родителям вашего класса.'],
+  ['[data-tab=more]','Ваша семья','Позовите маму, папу или ребёнка по коду семьи: бесплатно до трёх человек.']];
+  let i=0;S.tab='home';draw();
+  const hole=document.createElement('div'),tip=document.createElement('div');hole.className='hole';tip.className='tip';document.body.append(hole,tip);
+  const end=()=>{hole.remove();tip.remove();localStorage.tourDone='1'};
+  const go=()=>{const s=steps[i],el=$(s[0]);if(!el){end();return}const r=el.getBoundingClientRect();
+    Object.assign(hole.style,{left:r.left-6+'px',top:r.top-6+'px',width:r.width+12+'px',height:r.height+12+'px'});
+    tip.style.bottom=innerHeight-r.top+18+'px';
+    tip.innerHTML=`<b>${s[1]}</b><p>${s[2]}</p><div class="btns"><button class="lnk" data-t="x" style="color:var(--mute)">Пропустить</button><button class="btn sm" data-t="n">${i===steps.length-1?'Понятно':'Дальше'}</button></div>`};
+  tip.addEventListener('click',e=>{const t=e.target.dataset.t;if(t==='x')end();if(t==='n'){i++;i>=steps.length?end():go()}});go();
+}
+
+</script>
+</body>
+</html>

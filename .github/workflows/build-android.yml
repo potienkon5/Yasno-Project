@@ -1,0 +1,114 @@
+name: 2 - Build and publish signed APK
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New release version e.g. 1.0.0, then 1.0.1'
+        required: true
+        default: '1.0.0'
+      publish_release:
+        description: 'Publish to GitHub Releases (otherwise build downloadable artifact only)'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: yasno-android-release
+  cancel-in-progress: false
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release version
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Use version like 1.0.1'; exit 1; }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Android SDK packages
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+      - name: Prepare Capacitor project and native updater
+        working-directory: capacitor
+        shell: bash
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npm run android:sync
+      - name: Set public GitHub repository for updater
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+        shell: bash
+        run: |
+          python3 - <<'PYCODE'
+          import os
+          from pathlib import Path
+          p=Path('capacitor/www/apk-updater.js')
+          s=p.read_text().replace('REPLACE_WITH_GITHUB_USERNAME', os.environ['REPO_OWNER'])
+          s=s.replace("export const GITHUB_REPO = 'yasno-app'", "export const GITHUB_REPO = '"+os.environ['REPO_NAME']+"'")
+          p.write_text(s)
+          PYCODE
+      - name: Refresh bundled web files
+        working-directory: capacitor
+        run: npx cap sync android && node install-native-updater.mjs
+      - name: Apply Android version for install-over-existing
+        env:
+          VERSION: ${{ inputs.version }}
+        run: python3 .github/scripts/set_android_version.py "${VERSION}"
+      - name: Compile release APK
+        working-directory: capacitor/android
+        run: bash ./gradlew --no-daemon assembleRelease
+      - name: Sign release APK with persistent key
+        shell: bash
+        env:
+          YASNO_KEYSTORE_BASE64: ${{ secrets.YASNO_KEYSTORE_BASE64 }}
+          YASNO_KEYSTORE_PASSWORD: ${{ secrets.YASNO_KEYSTORE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$YASNO_KEYSTORE_BASE64" || { echo 'Missing GitHub secret YASNO_KEYSTORE_BASE64'; exit 1; }
+          test -n "$YASNO_KEYSTORE_PASSWORD" || { echo 'Missing GitHub secret YASNO_KEYSTORE_PASSWORD'; exit 1; }
+          mkdir -p dist
+          printf '%s' "$YASNO_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/yasno-release.p12"
+          SDK_TOOLS="$ANDROID_HOME/build-tools/35.0.0"
+          "$SDK_TOOLS/zipalign" -f -p 4 capacitor/android/app/build/outputs/apk/release/app-release-unsigned.apk dist/yasno-aligned.apk
+          "$SDK_TOOLS/apksigner" sign --ks "$RUNNER_TEMP/yasno-release.p12" \
+            --ks-key-alias yasno --ks-pass env:YASNO_KEYSTORE_PASSWORD \
+            --key-pass env:YASNO_KEYSTORE_PASSWORD \
+            --out dist/yasno-release.apk dist/yasno-aligned.apk
+          "$SDK_TOOLS/apksigner" verify --verbose dist/yasno-release.apk
+          sha256sum dist/yasno-release.apk > dist/SHA256SUMS.txt
+          rm -f dist/yasno-aligned.apk "$RUNNER_TEMP/yasno-release.p12"
+      - name: Provide signed APK as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yasno-android-${{ inputs.version }}
+          path: |
+            dist/yasno-release.apk
+            dist/SHA256SUMS.txt
+          retention-days: 30
+      - name: Publish GitHub Release (only when selected)
+        if: ${{ inputs.publish_release }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view "v${VERSION}" >/dev/null 2>&1; then
+            echo "Release v${VERSION} already exists; use a NEW higher version to avoid overwriting published packages"
+            exit 1
+          fi
+          gh release create "v${VERSION}" dist/yasno-release.apk dist/SHA256SUMS.txt \
+            --target "$GITHUB_SHA" --title "Ясно v${VERSION}" \
+            --notes "Обновление приложения Ясно v${VERSION}. APK для установки поверх предыдущей версии." \
+            --latest

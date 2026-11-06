@@ -1,0 +1,6 @@
+{
+  "appId":"kz.yasno.classroom",
+  "appName":"Ясно",
+  "webDir":"www",
+  "server":{"androidScheme":"https"}
+}
