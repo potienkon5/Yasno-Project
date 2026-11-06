@@ -30,7 +30,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #86
 .site-header{position:sticky;top:0;z-index:30;background:#faf9f5ed;backdrop-filter:blur(18px);border-bottom:1px solid #e7e6e8}
 .head{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:25px;letter-spacing:-.04em}
-.brand-icon{width:43px;height:43px;display:grid;place-items:center;background:linear-gradient(145deg,#817ef0,#3a4d9c);color:white;border-radius:14px;font:700 29px/1 'Literata',serif;box-shadow:0 7px 20px #5d64c433}
+.brand-icon{
+  width:43px;
+  height:43px;
+  border-radius:14px;
+  object-fit:cover;
+  display:block;
+  box-shadow:0 7px 20px #5d64c433;
+}
 nav{display:flex;align-items:center;gap:29px;font-size:14px;font-weight:600;color:#515c7d}
 nav a:hover{color:var(--violet)}
 .btn{display:inline-flex;justify-content:center;align-items:center;gap:12px;min-height:52px;border-radius:15px;padding:13px 23px;border:1px solid transparent;cursor:pointer;font-weight:700;font-size:15px;transition:transform .2s,box-shadow .2s,background .2s;text-align:center}
