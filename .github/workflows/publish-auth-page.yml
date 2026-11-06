@@ -1,0 +1,47 @@
+name: 3 - Publish Yasno email confirmation page
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'auth-page/**'
+      - 'capacitor/www/supabase-config.js'
+      - '.github/workflows/publish-auth-page.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: yasno-email-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare the public confirmation page
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _site/auth
+          cp auth-page/index.html _site/auth/index.html
+          cp capacitor/www/supabase-config.js _site/auth/supabase-config.js
+          touch _site/.nojekyll
+          # Never copy server-side keys or project credentials: only the existing
+          # public Supabase anon/publishable key used by the frontend.
+          test -s _site/auth/index.html
+          test -s _site/auth/supabase-config.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
