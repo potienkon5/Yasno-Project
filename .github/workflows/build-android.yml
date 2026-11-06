@@ -121,6 +121,14 @@ jobs:
           grep -Fq 'yasno-build" content="' capacitor/android/app/src/main/assets/public/index.html
           grep -Fq "LOAD_NO_CACHE" capacitor/android/app/src/main/java/kz/yasno/classroom/MainActivity.java
           grep -Fq "android.permission.SCHEDULE_EXACT_ALARM" capacitor/android/app/src/main/AndroidManifest.xml
+          # The updater must use Capacitor's built-in provider, not the old .updateprovider.
+          grep -Fq '.fileprovider' capacitor/android/app/src/main/java/kz/yasno/classroom/YasnoUpdaterPlugin.java
+          grep -Fq '\${applicationId}.fileprovider' capacitor/android/app/src/main/AndroidManifest.xml
+          grep -Fq '<cache-path' capacitor/android/app/src/main/res/xml/file_paths.xml
+          if grep -Fq '.updateprovider' capacitor/android/app/src/main/java/kz/yasno/classroom/YasnoUpdaterPlugin.java; then
+            echo 'ERROR: old .updateprovider authority remains in Java updater'
+            exit 1
+          fi
           echo "SUCCESS: correct GitHub settings, native updater and Android notifications bundled"
 
       - name: Compile release APK
