@@ -39,6 +39,8 @@ jobs:
          packages: 'platform-tools'
       - name: Android SDK packages
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0' 'platform-tools'
+      - name: Test deadline notifications logic
+        run: node --test tests/deadline-reminders.test.mjs
       - name: Prepare Capacitor project and native updater
         working-directory: capacitor
         shell: bash
