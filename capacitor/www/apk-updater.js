@@ -1,7 +1,7 @@
 // Ясно: GitHub Releases -> нативный Android Package Installer.
 // Укажите публичный репозиторий; для приватного репозитория этот способ НЕ подходит.
-export const GITHUB_OWNER = 'REPLACE_WITH_GITHUB_USERNAME';
-export const GITHUB_REPO = 'yasno-app';
+export const GITHUB_OWNER = 'potienkon5';
+export const GITHUB_REPO = 'Yasno-Project';
 const APK_NAME = 'yasno-release.apk';
 const native = () => window.Capacitor?.Plugins?.YasnoUpdater || null;
 const versionParts = s => String(s||'').replace(/^v/i,'').split('.').map(x=>Number(x));
